@@ -15,8 +15,12 @@ function LocalGame({ onExit }) {
     const [isEditingCustom, setIsEditingCustom] = useState(false);
     const [customInput, setCustomInput] = useState('');
 
+    // Scoring State
+    const [scores, setScores] = useState({}); // { "Liam": 5, "Bob": 2 }
+    const [votingSelection, setVotingSelection] = useState(null); // Index of player voted for
+
     // Game State
-    const [gameState, setGameState] = useState('SETUP'); // SETUP, HUB, REVEAL_MODAL, PLAYING, END
+    const [gameState, setGameState] = useState('SETUP'); // SETUP, HUB, REVEAL_MODAL, PLAYING, VOTING, END
     const [secretWord, setSecretWord] = useState('');
     const [category, setCategory] = useState('');
     const [imposterIndices, setImposterIndices] = useState([]);
@@ -122,7 +126,42 @@ function LocalGame({ onExit }) {
         setGameState('PLAYING');
     };
 
-    const revealImposter = () => {
+    const startVoting = () => {
+        setVotingSelection(null);
+        setGameState('VOTING');
+    };
+
+    const submitVote = () => {
+        if (votingSelection === null) return;
+
+        const votedPlayerIsImposter = imposterIndices.includes(votingSelection);
+
+        // Scoring Logic
+        const newScores = { ...scores };
+
+        // Initialize scores for current players if missing
+        players.forEach(p => {
+            if (newScores[p] === undefined) newScores[p] = 0;
+        });
+
+        if (votedPlayerIsImposter) {
+            // CIVILIANS WIN: +1 to all civilians
+            // (Imposters get 0)
+            players.forEach((p, index) => {
+                if (!imposterIndices.includes(index)) {
+                    newScores[p] = (newScores[p] || 0) + 1;
+                }
+            });
+        } else {
+            // IMPOSTERS WIN: +3 to all imposters
+            // (Civilians get 0)
+            imposterIndices.forEach(index => {
+                const impName = players[index];
+                newScores[impName] = (newScores[impName] || 0) + 3;
+            });
+        }
+
+        setScores(newScores);
         setGameState('END');
     };
 
@@ -557,10 +596,52 @@ function LocalGame({ onExit }) {
 
                 <div className="mt-4 w-full">
                     <button
-                        onClick={revealImposter}
-                        className="w-full bg-gradient-to-r from-red-600 to-pink-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg shadow-red-500/30 transition transform hover:scale-[1.02] active:scale-95 border border-red-500/30"
+                        onClick={startVoting}
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg shadow-blue-500/30 transition transform hover:scale-[1.02] active:scale-95 border border-blue-500/30"
                     >
-                        Reveal Imposter
+                        Vote to Eliminate
+                    </button>
+                </div>
+            </>
+        );
+    }
+
+    if (gameState === 'VOTING') {
+        const selectedName = votingSelection !== null ? players[votingSelection] : null;
+
+        return activeLayout(
+            <>
+                <h2 className="text-4xl font-black text-white mb-2">Cast Your Vote</h2>
+                <p className="text-gray-400 font-medium mb-6">Who is the Imposter?</p>
+
+                <div className="grid grid-cols-2 gap-3 w-full mb-6 max-h-[50vh] overflow-y-auto">
+                    {players.map((p, i) => {
+                        const isSelected = votingSelection === i;
+                        return (
+                            <button
+                                key={i}
+                                onClick={() => setVotingSelection(i)}
+                                className={`p-4 rounded-xl font-bold transition-all border-2 ${isSelected
+                                    ? 'bg-red-600 border-red-400 text-white shadow-lg shadow-red-500/40 scale-105'
+                                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
+                                    }`}
+                            >
+                                {p}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                <div className="w-full mt-auto">
+                    <button
+                        onClick={submitVote}
+                        disabled={votingSelection === null}
+                        className={`w-full py-4 rounded-2xl font-bold text-lg transition-all shadow-lg border border-transparent ${votingSelection !== null
+                            ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-red-500/40 hover:scale-[1.02] active:scale-95'
+                            : 'bg-white/5 text-gray-600 border-white/5 cursor-not-allowed'
+                            }`}
+                    >
+                        {selectedName ? `Vote Out ${selectedName}` : 'Select a Suspect'}
                     </button>
                 </div>
             </>
@@ -570,27 +651,57 @@ function LocalGame({ onExit }) {
     if (gameState === 'END') {
         // Collect all imposter names
         const imposterNames = imposterIndices.map(i => players[i]);
+        const votedName = votingSelection !== null ? players[votingSelection] : "No one";
+        const caughtImposter = votingSelection !== null && imposterIndices.includes(votingSelection);
+
+        // Determine Win State
+        const civiliansWin = caughtImposter;
 
         return activeLayout(
             <>
-                <div className="animate-bounce">
-                    <span className="text-8xl drop-shadow-2xl">🕵️‍♀️</span>
-                </div>
-                <div>
-                    <h2 className="text-xl text-gray-500 font-bold uppercase tracking-widest mb-2">
-                        {imposterNames.length > 1 ? "The Imposters were" : "The Imposter was"}
-                    </h2>
-                    <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-600 drop-shadow-sm leading-tight">
-                        {imposterNames.join(' & ')}
-                    </h1>
+                <div className="animate-bounce mb-2">
+                    <span className="text-7xl drop-shadow-2xl">{civiliansWin ? '🏆' : '😈'}</span>
                 </div>
 
-                <div className="glass-card p-8 rounded-3xl w-full mt-4 border border-emerald-500/20 bg-emerald-900/10">
-                    <p className="text-xs text-emerald-500 font-black uppercase tracking-widest mb-2">Secret Word</p>
-                    <p className="text-4xl font-black text-white">{secretWord}</p>
+                <h2 className={`text-4xl font-black mb-2 ${civiliansWin ? 'text-emerald-400' : 'text-red-500'}`}>
+                    {civiliansWin ? 'CIVILIANS WIN!' : 'IMPOSTER WINS!'}
+                </h2>
+
+                <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto leading-relaxed">
+                    {civiliansWin
+                        ? <span>You voted out <strong className="text-white">{votedName}</strong>, who was an Imposter!</span>
+                        : <span>You voted out <strong className="text-white">{votedName}</strong>, but the Imposter was <strong className="text-red-400">{imposterNames.join(' & ')}</strong>.</span>
+                    }
+                </p>
+
+                <div className="glass-card p-6 rounded-3xl w-full mb-6 border border-white/10">
+                    <p className="text-xs text-blue-300 font-black uppercase tracking-widest mb-1">Secret Word</p>
+                    <p className="text-3xl font-black text-white">{secretWord}</p>
                 </div>
 
-                <div className="flex gap-4 w-full mt-4">
+                {/* Leaderboard */}
+                <div className="w-full mb-6">
+                    <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-3">Scoreboard</p>
+                    <div className="glass-card rounded-2xl overflow-hidden border border-white/5">
+                        {players
+                            .concat(Object.keys(scores).filter(p => !players.includes(p))) // Include past players? Maybe just current.
+                            .filter((item, index, self) => self.indexOf(item) === index) // Unique
+                            .filter(p => players.includes(p)) // ONLY show current players for now to keep it clean
+                            .sort((a, b) => (scores[b] || 0) - (scores[a] || 0)) // Sort by score DESC
+                            .slice(0, 5) // Top 5
+                            .map((p, i) => (
+                                <div key={p} className={`flex items-center justify-between px-4 py-3 ${i !== players.length - 1 ? 'border-b border-white/5' : ''}`}>
+                                    <div className="flex items-center gap-3">
+                                        <span className={`font-black w-6 text-center ${i === 0 ? 'text-yellow-400' : 'text-gray-600'}`}>{i + 1}</span>
+                                        <span className="text-white font-bold">{p}</span>
+                                    </div>
+                                    <span className="text-emerald-400 font-black">{scores[p] || 0} pts</span>
+                                </div>
+                            ))}
+                    </div>
+                </div>
+
+                <div className="flex gap-4 w-full">
                     <button
                         onClick={startGame}
                         className="flex-1 bg-white text-black font-bold p-4 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
