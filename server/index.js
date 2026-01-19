@@ -114,6 +114,13 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Version Check
+    socket.on('get_version', (callback) => {
+        // Current Server Version - Bump this manually when deploying breaking changes
+        // Use '1.1' as the new baseline
+        callback({ version: '1.1' });
+    });
+
     // Manual Sync Enpoint
     socket.on('get_room', (code) => {
         const room = rooms.get(code);

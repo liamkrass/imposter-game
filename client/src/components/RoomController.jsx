@@ -5,8 +5,10 @@ import Lobby from './Lobby';
 import Game from './Game';
 import Voting from './Voting';
 import Results from './Results';
+import { useVersionCheck } from '../hooks/useVersionCheck';
 
 function RoomController() {
+    useVersionCheck(); // Will auto-reload if stale
     const { roomCode } = useParams();
     const navigate = useNavigate();
     const [room, setRoom] = useState(null);
