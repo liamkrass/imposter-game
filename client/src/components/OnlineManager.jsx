@@ -13,6 +13,13 @@ function OnlineManager({ onExit }) {
     const [error, setError] = useState('');
 
     useEffect(() => {
+        // Auto-join when code is 4 chars
+        if (roomCode.length === 4) {
+            joinRoom();
+        }
+    }, [roomCode]);
+
+    useEffect(() => {
         // Connect when entering online mode
         socket.connect();
 
@@ -29,6 +36,10 @@ function OnlineManager({ onExit }) {
 
     const handleNameSubmit = () => {
         if (playerName.trim()) {
+            // Easter Egg
+            if (playerName.trim().toLowerCase() === 'gus') {
+                setPlayerName('gus the pussy');
+            }
             setStep('MENU');
         }
     };
