@@ -167,7 +167,22 @@ function OnlineManager({ onExit }) {
     const [connected, setConnected] = useState(socket.connected);
 
     useEffect(() => {
-        const onConnect = () => setConnected(true);
+        const onConnect = () => {
+            setConnected(true);
+            // Attempt to rejoin if we were in a room
+            if (roomCode && playerName) {
+                console.log("Reconnecting... attempting to rejoin", roomCode);
+                socket.emit('join_room', { code: roomCode, playerName }, (response) => {
+                    if (response.success) {
+                        setRoom(response.room);
+                    } else {
+                        // If room is gone or full, kick to menu
+                        setStep('MENU');
+                        setError('Connection lost. Please rejoin manually.');
+                    }
+                });
+            }
+        };
         const onDisconnect = () => setConnected(false);
 
         socket.on('connect', onConnect);
@@ -180,7 +195,7 @@ function OnlineManager({ onExit }) {
             socket.off('connect', onConnect);
             socket.off('disconnect', onDisconnect);
         };
-    }, []);
+    }, [roomCode, playerName]);
 
     if (!connected && step !== 'NAME') {
         return (
