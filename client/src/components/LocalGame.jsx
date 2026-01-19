@@ -8,7 +8,9 @@ function LocalGame({ onExit }) {
     const [selectedCategories, setSelectedCategories] = useState(wordList.map(c => c.category));
     const [imposterCount, setImposterCount] = useState(1);
     const [chaosMode, setChaosMode] = useState(false);
+    const [chaosMode, setChaosMode] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const [showLeaderboard, setShowLeaderboard] = useState(false);
 
     // Custom Category State
     const [customWordsList, setCustomWordsList] = useState([]);
@@ -20,7 +22,7 @@ function LocalGame({ onExit }) {
     const [votingSelection, setVotingSelection] = useState(null); // Index of player voted for
 
     // Game State
-    const [gameState, setGameState] = useState('SETUP'); // SETUP, HUB, REVEAL_MODAL, PLAYING, VOTING, END
+    const [gameState, setGameState] = useState('SETUP'); // SETUP, HUB, REVEAL_MODAL, ACTION, END
     const [secretWord, setSecretWord] = useState('');
     const [category, setCategory] = useState('');
     const [imposterIndices, setImposterIndices] = useState([]);
@@ -33,7 +35,11 @@ function LocalGame({ onExit }) {
 
     const addPlayer = () => {
         if (inputValue.trim()) {
-            setPlayers([...players, inputValue.trim()]);
+            let name = inputValue.trim();
+            if (name.toLowerCase() === 'gus') {
+                name = 'gus the pussy';
+            }
+            setPlayers([...players, name]);
             setInputValue('');
         }
     };
@@ -122,13 +128,9 @@ function LocalGame({ onExit }) {
         setGameState('HUB');
     };
 
-    const startPlaying = () => {
-        setGameState('PLAYING');
-    };
-
-    const startVoting = () => {
+    const startActionPhase = () => {
         setVotingSelection(null);
-        setGameState('VOTING');
+        setGameState('ACTION');
     };
 
     const submitVote = () => {
@@ -320,6 +322,58 @@ function LocalGame({ onExit }) {
         </button>
     );
 
+    const TrophyIcon = () => (
+        <button
+            onClick={() => setShowLeaderboard(true)}
+            className="absolute top-6 left-6 z-40 text-white/50 hover:text-yellow-400 transition-colors p-2"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                <path d="M4 22h16"></path>
+                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+            </svg>
+        </button>
+    );
+
+    const LeaderboardModal = () => {
+        if (!showLeaderboard) return null;
+        return (
+            <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
+                <div className="bg-dark-lighter border border-gray-700 p-6 rounded-3xl w-full max-w-sm shadow-2xl relative">
+                    <button
+                        onClick={() => setShowLeaderboard(false)}
+                        className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                    >
+                        ✕
+                    </button>
+
+                    <h3 className="text-xl font-bold text-white mb-6 text-center">🏆 Leaderboard</h3>
+
+                    <div className="rounded-2xl overflow-hidden border border-white/5 bg-black/20">
+                        {players
+                            .concat(Object.keys(scores).filter(p => !players.includes(p)))
+                            .filter((item, index, self) => self.indexOf(item) === index)
+                            .filter(p => players.includes(p))
+                            .sort((a, b) => (scores[b] || 0) - (scores[a] || 0))
+                            .map((p, i) => (
+                                <div key={p} className={`flex items-center justify-between px-4 py-3 ${i !== players.length - 1 ? 'border-b border-white/5' : ''}`}>
+                                    <div className="flex items-center gap-3">
+                                        <span className={`font-black w-6 text-center ${i === 0 ? 'text-yellow-400' : 'text-gray-600'}`}>{i + 1}</span>
+                                        <span className="text-white font-bold">{p}</span>
+                                    </div>
+                                    <span className="text-emerald-400 font-black">{scores[p] || 0} pts</span>
+                                </div>
+                            ))}
+                        {players.length === 0 && <p className="p-4 text-center text-gray-500 text-sm">No scores yet!</p>}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // --- RENDERERS ---
 
     if (gameState === 'SETUP') {
@@ -452,7 +506,9 @@ function LocalGame({ onExit }) {
         <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto p-6 animate-fade-in relative z-10 text-center min-h-[60vh] justify-center">
             <BackgroundBlobs />
             <GearIcon />
+            <TrophyIcon />
             <SettingsModal />
+            <LeaderboardModal />
             {content}
         </div>
     );
@@ -488,14 +544,14 @@ function LocalGame({ onExit }) {
                         {allSeen ? "Everyone is ready!" : `Waiting for ${players.length - seenPlayers.size} players...`}
                     </p>
                     <button
-                        onClick={startPlaying}
+                        onClick={startActionPhase}
                         disabled={!allSeen}
                         className={`w-full py-4 rounded-2xl font-bold text-lg transition-all shadow-lg border border-transparent ${allSeen
                             ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/40 animate-pulse hover:scale-[1.02] border-emerald-400/30'
                             : 'bg-white/5 text-gray-600 border-white/5 cursor-not-allowed'
                             }`}
                     >
-                        Start Voting Phase
+                        Start Game
                     </button>
                 </div>
             </>
