@@ -1,7 +1,7 @@
 import React from 'react';
 import socket from '../socket';
 
-function Lobby({ room, playerName }) {
+function Lobby({ room, playerName, lastUpdate, onForceSync }) {
     const isHost = room.players.find(p => p.name === playerName)?.isHost;
 
     const handleStart = () => {
@@ -93,10 +93,21 @@ function Lobby({ room, playerName }) {
                 </div>
             )}
             {/* Debug Footer */}
-            <div className="w-full text-center mt-8 pt-4 border-t border-white/5">
+            <div className="w-full text-center mt-8 pt-4 border-t border-white/5 flex flex-col items-center gap-2">
                 <p className="text-[10px] font-mono text-gray-600 uppercase tracking-widest">
                     DEBUG: {socket.id ? socket.id.slice(0, 4) : 'DISC'} | {socket.connected ? 'CONN' : 'OFF'} | LATENCY: {socket.io?.engine?.transport?.name}
                 </p>
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-700 font-mono">
+                        Last Upd: {lastUpdate ? new Date(lastUpdate).toLocaleTimeString().split(' ')[0] : 'None'}
+                    </span>
+                    <button
+                        onClick={onForceSync}
+                        className="px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-[10px] font-bold rounded border border-blue-500/20 transition"
+                    >
+                        FORCE SYNC
+                    </button>
+                </div>
             </div>
         </div>
     );

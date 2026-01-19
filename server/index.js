@@ -118,7 +118,10 @@ io.on('connection', (socket) => {
     socket.on('get_room', (code) => {
         const room = rooms.get(code);
         if (room) {
+            console.log(`Socket ${socket.id} requested sync for room ${code}`);
             socket.emit('room_update', room); // Send only to requestor
+        } else {
+            console.log(`Socket ${socket.id} requested sync but room ${code} not found`);
         }
     });
 

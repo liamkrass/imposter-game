@@ -12,6 +12,7 @@ function RoomController() {
     const [room, setRoom] = useState(null);
     const [error, setError] = useState('');
     const [connected, setConnected] = useState(socket.connected);
+    const [lastUpdate, setLastUpdate] = useState(Date.now()); // Debug: Track last update time
 
     // Get player name from storage (should be set in Home)
     const playerName = sessionStorage.getItem('imposter_name');
@@ -61,7 +62,9 @@ function RoomController() {
         socket.on('connect', onConnect);
         socket.on('disconnect', onDisconnect);
         socket.on('room_update', (updatedRoom) => {
+            console.log("Received room update:", updatedRoom);
             setRoom(updatedRoom);
+            setLastUpdate(Date.now());
         });
 
         // Initial check if already connected
@@ -183,7 +186,7 @@ function RoomController() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
                 </svg>
             </button>
-            {room.gameState === 'LOBBY' && <Lobby room={room} playerName={playerName} />}
+            {room.gameState === 'LOBBY' && <Lobby room={room} playerName={playerName} lastUpdate={lastUpdate} onForceSync={() => socket.emit('get_room', room.code)} />}
             {room.gameState === 'PLAYING' && <Game room={room} playerName={playerName} />}
             {room.gameState === 'VOTING' && <Voting room={room} playerName={playerName} />}
             {room.gameState === 'RESULTS' && <Results room={room} playerName={playerName} />}
