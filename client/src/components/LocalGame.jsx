@@ -615,90 +615,55 @@ function LocalGame({ onExit }) {
         );
     }
 
-    if (gameState === 'PLAYING') {
+    if (gameState === 'ACTION') {
         const startPlayerName = players[startPlayerIndex];
-        return activeLayout(
-            <>
-                <h2 className="text-4xl font-black text-white mb-2">Discuss & Vote</h2>
-
-                <div className="w-full flex justify-center mb-4">
-                    <div className="glass-card px-8 py-3 rounded-full border border-white/10 shadow-lg flex items-center gap-3">
-                        <span className="text-gray-300 font-medium">Category:</span>
-                        <span className="text-blue-400 font-bold uppercase tracking-wider">{category}</span>
-                    </div>
-                </div>
-
-                <div className="w-full glass-card p-5 md:p-8 rounded-3xl border border-white/5 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
-
-                    <p className="text-sm text-gray-500 font-bold uppercase tracking-[0.2em] mb-6">First Question</p>
-
-                    <div className="flex flex-col items-center justify-center gap-4">
-                        <div className="relative">
-                            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/30 animate-[spin_10s_linear_infinite]">
-                                <span className="text-3xl animate-[spin_10s_linear_infinite_reverse]">🎲</span>
-                            </div>
-                            <div className="absolute -bottom-2 right-0 bg-white text-black text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-300 shadow-sm">
-                                STARTS
-                            </div>
-                        </div>
-
-                        <div>
-                            <p className="text-white font-black text-3xl tracking-tight">{startPlayerName}</p>
-                            <p className="text-blue-200/60 text-sm font-medium mt-1">starts the discussion</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mt-4 w-full">
-                    <button
-                        onClick={startVoting}
-                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg shadow-blue-500/30 transition transform hover:scale-[1.02] active:scale-95 border border-blue-500/30"
-                    >
-                        Vote to Eliminate
-                    </button>
-                </div>
-            </>
-        );
-    }
-
-    if (gameState === 'VOTING') {
         const selectedName = votingSelection !== null ? players[votingSelection] : null;
 
         return activeLayout(
             <>
-                <h2 className="text-4xl font-black text-white mb-2">Cast Your Vote</h2>
-                <p className="text-gray-400 font-medium mb-6">Who is the Imposter?</p>
+                <div className="w-full flex flex-col gap-6 h-full justify-between">
 
-                <div className="grid grid-cols-2 gap-3 w-full mb-6 max-h-[50vh] overflow-y-auto">
-                    {players.map((p, i) => {
-                        const isSelected = votingSelection === i;
-                        return (
-                            <button
-                                key={i}
-                                onClick={() => setVotingSelection(i)}
-                                className={`p-4 rounded-xl font-bold transition-all border-2 ${isSelected
-                                    ? 'bg-red-600 border-red-400 text-white shadow-lg shadow-red-500/40 scale-105'
-                                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
-                                    }`}
-                            >
-                                {p}
-                            </button>
-                        );
-                    })}
-                </div>
+                    {/* Discussion Info */}
+                    <div className="glass-card p-4 rounded-3xl border border-white/5 relative overflow-hidden flex flex-col items-center">
+                        <p className="text-xs text-blue-200/60 font-bold uppercase tracking-widest mb-2">Category: {category}</p>
+                        <h3 className="text-2xl font-black text-white">{startPlayerName} <span className="text-gray-400 font-medium text-lg">starts</span></h3>
+                    </div>
 
-                <div className="w-full mt-auto">
-                    <button
-                        onClick={submitVote}
-                        disabled={votingSelection === null}
-                        className={`w-full py-4 rounded-2xl font-bold text-lg transition-all shadow-lg border border-transparent ${votingSelection !== null
-                            ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-red-500/40 hover:scale-[1.02] active:scale-95'
-                            : 'bg-white/5 text-gray-600 border-white/5 cursor-not-allowed'
-                            }`}
-                    >
-                        {selectedName ? `Vote Out ${selectedName}` : 'Select a Suspect'}
-                    </button>
+                    {/* Voting Grid */}
+                    <div className="flex-1 min-h-0 flex flex-col justify-center">
+                        <p className="text-gray-400 font-medium mb-4 text-sm text-center uppercase tracking-widest">Select the Imposter</p>
+                        <div className="grid grid-cols-2 gap-3 w-full max-h-[40vh] overflow-y-auto">
+                            {players.map((p, i) => {
+                                const isSelected = votingSelection === i;
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => setVotingSelection(i)}
+                                        className={`p-4 rounded-xl font-bold transition-all border-2 ${isSelected
+                                            ? 'bg-red-600 border-red-400 text-white shadow-lg shadow-red-500/40 scale-105'
+                                            : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20'
+                                            }`}
+                                    >
+                                        {p}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="w-full">
+                        <button
+                            onClick={submitVote}
+                            disabled={votingSelection === null}
+                            className={`w-full py-4 rounded-2xl font-bold text-lg transition-all shadow-lg border border-transparent ${votingSelection !== null
+                                ? 'bg-gradient-to-r from-red-600 to-orange-600 text-white shadow-red-500/40 hover:scale-[1.02] active:scale-95'
+                                : 'bg-white/5 text-gray-600 border-white/5 cursor-not-allowed'
+                                }`}
+                        >
+                            {selectedName ? `Vote Out ${selectedName}` : 'Select a Suspect'}
+                        </button>
+                    </div>
                 </div>
             </>
         );
