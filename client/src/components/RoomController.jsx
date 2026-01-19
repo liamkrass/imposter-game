@@ -87,11 +87,9 @@ function RoomController() {
     }, [roomCode, playerName]);
 
     const handleExit = () => {
-        // Explicitly leave? Or just navigate away?
-        // Socket.io doesn't have a standardized "leave room" without custom event or disconnect.
-        // We can just disconnect to force leave, or emit a leave event if we had one.
-        // For now, refreshing the page or navigating away is "leaving" in the UI sense.
-        // If we want to really leave, we can reload to root?
+        const confirmed = window.confirm('Are you sure you want to leave this game?');
+        if (!confirmed) return;
+
         navigate('/');
         window.location.reload(); // Force socket disconnect/cleanup
     };

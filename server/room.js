@@ -9,6 +9,10 @@ class Room {
         this.votes = {}; // playerId -> voteCount
         this.winner = null;
         this.usedWords = [];
+
+        // Host Settings
+        this.imposterCount = 1;
+        this.public = true; // Visible in Active Lobbies?
     }
 
     addPlayer(id, name) {
@@ -69,10 +73,15 @@ class Room {
         this.winner = null;
         this.votes = {};
 
-        // Assign Roles
-        const imposterIndex = Math.floor(Math.random() * this.players.length);
+        // Assign Roles - Support multiple imposters
+        const safeImposterCount = Math.min(this.imposterCount, Math.max(1, this.players.length - 1));
+        const imposterIndices = new Set();
+        while (imposterIndices.size < safeImposterCount) {
+            imposterIndices.add(Math.floor(Math.random() * this.players.length));
+        }
+
         this.players.forEach((p, i) => {
-            p.role = i === imposterIndex ? 'IMPOSTER' : 'CIVILIAN';
+            p.role = imposterIndices.has(i) ? 'IMPOSTER' : 'CIVILIAN';
             p.vote = null;
         });
 

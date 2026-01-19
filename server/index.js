@@ -44,6 +44,43 @@ io.on('connection', (socket) => {
         console.log(`Room created: ${code} by ${playerName}`);
     });
 
+    // Get list of active public lobbies
+    socket.on('get_lobbies', (callback) => {
+        const lobbies = [];
+        for (const [code, room] of rooms.entries()) {
+            if (room.public && room.gameState === 'LOBBY' && room.players.length > 0) {
+                const host = room.players.find(p => p.isHost);
+                lobbies.push({
+                    code,
+                    hostName: host ? host.name : 'Unknown',
+                    playerCount: room.players.length
+                });
+            }
+        }
+        callback(lobbies);
+    });
+
+    // Update room settings (host only)
+    socket.on('update_settings', ({ code, settings }) => {
+        const room = rooms.get(code);
+        if (!room) return;
+
+        const player = room.getPlayer(socket.id);
+        if (!player || !player.isHost) return; // Only host can change settings
+
+        // Apply settings
+        if (settings.imposterCount !== undefined) {
+            room.imposterCount = Math.max(1, Math.min(settings.imposterCount, Math.floor((room.players.length - 1) / 2) || 1));
+        }
+        if (settings.public !== undefined) {
+            room.public = settings.public;
+        }
+
+        // Broadcast update
+        io.to(code).emit('room_update', room);
+        console.log(`Settings updated for room ${code}: imposters=${room.imposterCount}, public=${room.public}`);
+    });
+
     socket.on('join_room', ({ code, playerName }, callback) => {
         const room = rooms.get(code);
         if (!room) {

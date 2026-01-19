@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import socket from '../socket';
+import ActiveLobbies from './ActiveLobbies';
 
 function Home() {
     const navigate = useNavigate();
@@ -146,6 +147,14 @@ function Home() {
                         {error}
                     </div>
                 )}
+
+                {/* Active Lobbies Section */}
+                <div className="relative flex items-center gap-4 py-2 mt-2">
+                    <div className="h-px bg-white/10 flex-1"></div>
+                    <span className="text-gray-500 text-xs font-bold uppercase">ACTIVE LOBBIES</span>
+                    <div className="h-px bg-white/10 flex-1"></div>
+                </div>
+                <ActiveLobbies />
             </div>
 
             <button onClick={() => setStep('NAME')} className="text-center text-gray-500 hover:text-white text-sm font-medium transition-colors">
