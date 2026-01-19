@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import OnlineManager from './OnlineManager';
 import LocalGame from './LocalGame';
 
