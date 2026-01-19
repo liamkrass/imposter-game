@@ -49,7 +49,9 @@ io.on('connection', (socket) => {
         if (!room) {
             return callback({ success: false, message: "Room not found" });
         }
-        if (room.gameState !== 'LOBBY') {
+        const existingPlayer = room.players.find(p => p.name.toUpperCase() === playerName.toUpperCase());
+
+        if (room.gameState !== 'LOBBY' && !existingPlayer) {
             return callback({ success: false, message: "Game already started" });
         }
 
