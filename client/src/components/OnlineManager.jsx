@@ -152,6 +152,39 @@ function OnlineManager({ onExit }) {
 
     // --- MAIN RENDER ---
 
+    // Show connecting state if socket not connected
+    const [connected, setConnected] = useState(socket.connected);
+
+    useEffect(() => {
+        const onConnect = () => setConnected(true);
+        const onDisconnect = () => setConnected(false);
+
+        socket.on('connect', onConnect);
+        socket.on('disconnect', onDisconnect);
+
+        // Initial check
+        if (socket.connected) setConnected(true);
+
+        return () => {
+            socket.off('connect', onConnect);
+            socket.off('disconnect', onDisconnect);
+        };
+    }, []);
+
+    if (!connected && step !== 'NAME') {
+        return (
+            <div className="min-h-[60vh] w-full flex items-center justify-center p-4 relative z-10">
+                {renderBackground()}
+                <div className="glass-card p-8 rounded-3xl flex flex-col items-center gap-4 animate-pulse">
+                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <h2 className="text-xl font-bold text-white">Connecting to Server...</h2>
+                    <p className="text-sm text-gray-400">This may take up to a minute (waking up server)</p>
+                    <button onClick={onExit} className="text-gray-500 hover:text-white text-sm mt-4">Cancel</button>
+                </div>
+            </div>
+        );
+    }
+
     if (step === 'ROOM' && room) {
         return (
             <div className="w-full max-w-md mx-auto p-4 md:p-0 animate-fade-in relative z-10 min-h-[60vh] flex flex-col justify-center">
