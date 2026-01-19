@@ -5,6 +5,10 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
     const isHost = room.players.find(p => p.name === playerName)?.isHost;
     const [showSettings, setShowSettings] = useState(false);
 
+    // Defaults for settings (in case server hasn't set them yet)
+    const imposterCount = room.imposterCount ?? 1;
+    const isPublic = room.public ?? true;
+
     const handleStart = () => {
         socket.emit('start_game', room.code);
     };
@@ -34,16 +38,16 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
                         <label className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 block">Imposters</label>
                         <div className="flex items-center gap-4 bg-black/20 p-2 rounded-xl">
                             <button
-                                onClick={() => updateSettings({ imposterCount: Math.max(1, room.imposterCount - 1) })}
-                                disabled={room.imposterCount <= 1}
+                                onClick={() => updateSettings({ imposterCount: Math.max(1, imposterCount - 1) })}
+                                disabled={imposterCount <= 1}
                                 className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-xl font-bold disabled:opacity-30"
                             >
                                 -
                             </button>
-                            <span className="flex-1 text-center text-2xl font-black text-white">{room.imposterCount}</span>
+                            <span className="flex-1 text-center text-2xl font-black text-white">{imposterCount}</span>
                             <button
-                                onClick={() => updateSettings({ imposterCount: Math.min(maxImposters, room.imposterCount + 1) })}
-                                disabled={room.imposterCount >= maxImposters}
+                                onClick={() => updateSettings({ imposterCount: Math.min(maxImposters, imposterCount + 1) })}
+                                disabled={imposterCount >= maxImposters}
                                 className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-xl font-bold disabled:opacity-30"
                             >
                                 +
@@ -55,10 +59,10 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
                     <div className="mb-6 bg-black/20 p-4 rounded-xl flex items-center justify-between">
                         <span className="text-gray-400 font-bold uppercase tracking-wider text-sm">Public Lobby</span>
                         <button
-                            onClick={() => updateSettings({ public: !room.public })}
-                            className={`w-12 h-6 rounded-full p-1 transition-colors ${room.public ? 'bg-emerald-500' : 'bg-gray-700'}`}
+                            onClick={() => updateSettings({ public: !isPublic })}
+                            className={`w-12 h-6 rounded-full p-1 transition-colors ${isPublic ? 'bg-emerald-500' : 'bg-gray-700'}`}
                         >
-                            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${room.public ? 'translate-x-6' : 'translate-x-0'}`} />
+                            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-0'}`} />
                         </button>
                     </div>
 
@@ -105,10 +109,10 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
                 {/* Settings Info Badge */}
                 <div className="flex justify-center gap-2 mt-3">
                     <span className="text-[10px] bg-red-500/10 text-red-400 px-2 py-1 rounded-full border border-red-500/20">
-                        {room.imposterCount} Imposter{room.imposterCount > 1 ? 's' : ''}
+                        {imposterCount} Imposter{imposterCount > 1 ? 's' : ''}
                     </span>
-                    <span className={`text-[10px] px-2 py-1 rounded-full border ${room.public ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-gray-500/10 text-gray-500 border-gray-500/20'}`}>
-                        {room.public ? 'Public' : 'Private'}
+                    <span className={`text-[10px] px-2 py-1 rounded-full border ${isPublic ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-gray-500/10 text-gray-500 border-gray-500/20'}`}>
+                        {isPublic ? 'Public' : 'Private'}
                     </span>
                 </div>
             </div>

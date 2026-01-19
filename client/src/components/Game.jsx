@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import socket from '../socket';
+import Voting from './Voting';
 
 function Game({ room, playerName }) {
     const [revealed, setRevealed] = useState(false);
+    const [showVoting, setShowVoting] = useState(false); // Local voting state for this player
 
     // Safety check: ensure room and players exist
     if (!room || !room.players) return <div className="text-white text-center">Loading Game Data...</div>;
@@ -21,9 +23,10 @@ function Game({ room, playerName }) {
 
     const isImposter = self.role === 'IMPOSTER';
 
-    const handleVoteStart = () => {
-        socket.emit('start_voting', room.code);
-    };
+    // If this player clicked "Start Voting", show them the voting UI locally
+    if (showVoting) {
+        return <Voting room={room} playerName={playerName} />;
+    }
 
     return (
         <div className="flex flex-col items-center gap-6 w-full">
@@ -68,7 +71,7 @@ function Game({ room, playerName }) {
             <div className="mt-8 text-center">
                 <p className="text-gray-400 mb-4">Discuss with other players...</p>
                 <button
-                    onClick={handleVoteStart}
+                    onClick={() => setShowVoting(true)}
                     className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-red-900/50 transition transform hover:scale-105"
                 >
                     Start Voting
