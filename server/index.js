@@ -64,7 +64,9 @@ io.on('connection', (socket) => {
         socket.join(code);
 
         // Notify others
+        // Notify others
         io.to(code).emit('room_update', room);
+        console.log(`Broadcasted update to room ${code}. Players: ${room.players.map(p => p.name).join(', ')}`);
 
         callback({ success: true, room });
         console.log(`${playerName} joined ${code}`);
