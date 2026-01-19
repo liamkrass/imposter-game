@@ -1,60 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import socket from './socket';
-
-// Components (will create next)
+import React from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Landing from './components/Landing';
-import Lobby from './components/Lobby';
-import Game from './components/Game';
-import Voting from './components/Voting';
-import Results from './components/Results';
+import Home from './components/Home'; // The new Online Menu
+import RoomController from './components/RoomController';
+import LocalGame from './components/LocalGame';
+
+// Wrapper to pass navigate as onExit to LocalGame
+const LocalGameWrapper = () => {
+  const navigate = useNavigate();
+  return <LocalGame onExit={() => navigate('/')} />;
+};
 
 function App() {
-  const [room, setRoom] = useState(null);
-  const [playerName, setPlayerName] = useState('');
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    socket.on('room_update', (updatedRoom) => {
-      setRoom(updatedRoom);
-      setError('');
-    });
-
-    return () => {
-      socket.off('room_update');
-    };
-  }, []);
-
-  const renderView = () => {
-    if (!room) {
-      return <Landing setRoom={setRoom} setPlayerName={setPlayerName} setError={setError} />;
-    }
-
-    switch (room.gameState) {
-      case 'LOBBY':
-        return <Lobby room={room} playerName={playerName} />;
-      case 'PLAYING':
-        return <Game room={room} playerName={playerName} />;
-      case 'VOTING':
-        return <Voting room={room} playerName={playerName} />;
-      case 'END':
-        return <Results room={room} playerName={playerName} />;
-      default:
-        return <div>Unknown State</div>;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-dark text-white flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-dark-lighter p-6 rounded-xl shadow-2xl border border-gray-700">
-
-        {error && (
-          <div className="bg-red-500/20 text-red-200 p-3 rounded mb-4 text-center">
-            {error}
-          </div>
-        )}
-        {renderView()}
+    <BrowserRouter>
+      <div className="min-h-screen bg-dark text-white flex flex-col items-center justify-center p-4">
+        {/* We keep the container simple, individual pages handle their cards/layout */}
+        <div className="w-full max-w-md">
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/local" element={<LocalGameWrapper />} />
+            <Route path="/online" element={<Home />} />
+            <Route path="/room/:roomCode" element={<RoomController />} />
+          </Routes>
+        </div>
       </div>
-    </div>
+    </BrowserRouter>
   );
 }
 

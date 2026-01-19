@@ -1,17 +1,7 @@
-import { useState } from 'react';
-import OnlineManager from './OnlineManager';
-import LocalGame from './LocalGame';
+import { useNavigate } from 'react-router-dom';
 
 function Landing() {
-    const [mode, setMode] = useState('menu'); // menu, local, online
-
-    if (mode === 'local') {
-        return <LocalGame onExit={() => setMode('menu')} />;
-    }
-
-    if (mode === 'online') {
-        return <OnlineManager onExit={() => setMode('menu')} />;
-    }
+    const navigate = useNavigate();
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] w-full max-w-md mx-auto p-4 md:p-8 animate-fade-in relative z-10">
@@ -24,31 +14,28 @@ function Landing() {
             </div>
 
             <div className="glass-card rounded-3xl p-8 w-full flex flex-col gap-6">
+                <div className="flex flex-col gap-3">
+                    <button
+                        onClick={() => navigate('/local')}
+                        className="group relative w-full py-5 text-white font-black text-2xl rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 shadow-xl shadow-purple-500/30 hover:scale-[1.02] active:scale-95 transition-all border border-white/10 overflow-hidden"
+                    >
+                        <span className="relative z-10 flex items-center justify-center gap-2">
+                            <span>PLAY</span>
+                            <span className="text-sm font-normal opacity-80">(Local Party)</span>
+                        </span>
+                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                    </button>
 
-                {mode === 'menu' && (
-                    <div className="flex flex-col gap-3">
-                        <button
-                            onClick={() => setMode('local')}
-                            className="group relative w-full py-5 text-white font-black text-2xl rounded-2xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 shadow-xl shadow-purple-500/30 hover:scale-[1.02] active:scale-95 transition-all border border-white/10 overflow-hidden"
-                        >
-                            <span className="relative z-10 flex items-center justify-center gap-2">
-                                <span>PLAY</span>
-                                <span className="text-sm font-normal opacity-80">(Local Party)</span>
-                            </span>
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                        </button>
-
-                        <button
-                            onClick={() => setMode('online')}
-                            className="group relative w-full py-4 text-white font-bold text-xl rounded-2xl bg-white/5 shadow-lg border border-white/10 hover:bg-white/10 transition-all overflow-hidden"
-                        >
-                            <span className="relative z-10 flex items-center justify-center gap-2 text-gray-300 group-hover:text-white">
-                                <span>Play Online</span>
-                                <span className="text-xs font-normal opacity-50 bg-white/10 px-2 py-0.5 rounded">Beta</span>
-                            </span>
-                        </button>
-                    </div>
-                )}
+                    <button
+                        onClick={() => navigate('/online')}
+                        className="group relative w-full py-4 text-white font-bold text-xl rounded-2xl bg-white/5 shadow-lg border border-white/10 hover:bg-white/10 transition-all overflow-hidden"
+                    >
+                        <span className="relative z-10 flex items-center justify-center gap-2 text-gray-300 group-hover:text-white">
+                            <span>Play Online</span>
+                            <span className="text-xs font-normal opacity-50 bg-white/10 px-2 py-0.5 rounded">Beta</span>
+                        </span>
+                    </button>
+                </div>
             </div>
 
             {/* Decoration Circles */}
