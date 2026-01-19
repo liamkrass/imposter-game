@@ -32,6 +32,16 @@ class Room {
         if (player) {
             player.connected = false;
         }
+
+        // Auto-End Game if active players drop below 3 while playing
+        if (this.gameState === 'PLAYING' || this.gameState === 'VOTING') {
+            const activeCount = this.players.filter(p => p.connected).length;
+            if (activeCount < 3) {
+                console.log(`Room ${this.code}: Active players (${activeCount}) < 3. Resetting game.`);
+                this.resetGame();
+            }
+        }
+
         // Return true if ALL players are disconnected (room is empty of active users)
         return this.players.every(p => !p.connected);
     }
