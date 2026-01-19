@@ -191,7 +191,7 @@ function RoomController() {
             {room.gameState === 'LOBBY' && <Lobby room={room} playerName={playerName} lastUpdate={lastUpdate} onForceSync={() => socket.emit('get_room', room.code)} />}
             {room.gameState === 'PLAYING' && <Game room={room} playerName={playerName} />}
             {room.gameState === 'VOTING' && <Voting room={room} playerName={playerName} />}
-            {room.gameState === 'RESULTS' && <Results room={room} playerName={playerName} />}
+            {room.gameState === 'END' && <Results room={room} playerName={playerName} />}
         </div>
     );
 }

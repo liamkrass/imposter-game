@@ -8,6 +8,7 @@ function Home() {
     const [playerName, setPlayerName] = useState('');
     const [roomCodeInput, setRoomCodeInput] = useState('');
     const [error, setError] = useState('');
+    const [isCreating, setIsCreating] = useState(false); // Loading state for Create Room
 
     useEffect(() => {
         // Hydrate Name
@@ -32,15 +33,26 @@ function Home() {
     };
 
     const createRoom = () => {
+        setIsCreating(true);
+        setError('');
         socket.connect(); // Ensure connection
         socket.emit('create_room', playerName, (response) => {
+            setIsCreating(false);
             if (response.success) {
                 // Navigate to room (RoomController will handle the rest)
                 navigate(`/room/${response.code}`);
             } else {
-                setError('Failed to create room');
+                setError('Failed to create room. Try again.');
             }
         });
+
+        // Timeout fallback for cold starts
+        setTimeout(() => {
+            if (isCreating) {
+                setError('Server is waking up... Try again in a moment.');
+                setIsCreating(false);
+            }
+        }, 8000);
     };
 
     // Auto-navigate when code is 4 chars
@@ -93,12 +105,22 @@ function Home() {
             <div className="flex flex-col gap-4">
                 <button
                     onClick={createRoom}
-                    className="group relative w-full py-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg shadow-teal-500/20 hover:scale-[1.02] active:scale-95 transition-all overflow-hidden"
+                    disabled={isCreating}
+                    className={`group relative w-full py-6 rounded-2xl shadow-lg shadow-teal-500/20 transition-all overflow-hidden ${isCreating ? 'bg-gray-700 cursor-wait' : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:scale-[1.02] active:scale-95'}`}
                 >
                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                     <span className="relative z-10 flex flex-col items-center">
-                        <span className="text-2xl font-black text-white">CREATE ROOM</span>
-                        <span className="text-teal-100 text-xs font-medium uppercase tracking-wider">Host a new game</span>
+                        {isCreating ? (
+                            <>
+                                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mb-1"></div>
+                                <span className="text-white text-sm font-medium">Connecting...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="text-2xl font-black text-white">CREATE ROOM</span>
+                                <span className="text-teal-100 text-xs font-medium uppercase tracking-wider">Host a new game</span>
+                            </>
+                        )}
                     </span>
                 </button>
 
