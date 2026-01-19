@@ -15,6 +15,7 @@ function RoomController() {
     const [error, setError] = useState('');
     const [connected, setConnected] = useState(socket.connected);
     const [lastUpdate, setLastUpdate] = useState(Date.now()); // Debug: Track last update time
+    const [showLeaveModal, setShowLeaveModal] = useState(false);
 
     // Get player name from storage (should be set in Home)
     const playerName = sessionStorage.getItem('imposter_name');
@@ -87,11 +88,39 @@ function RoomController() {
     }, [roomCode, playerName]);
 
     const handleExit = () => {
-        const confirmed = window.confirm('Are you sure you want to leave this game?');
-        if (!confirmed) return;
+        setShowLeaveModal(true);
+    };
 
+    const confirmLeave = () => {
         navigate('/');
-        window.location.reload(); // Force socket disconnect/cleanup
+        window.location.reload();
+    };
+
+    // Leave Confirmation Modal
+    const LeaveModal = () => {
+        if (!showLeaveModal) return null;
+        return (
+            <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
+                <div className="glass-card border border-gray-700 p-6 rounded-3xl w-full max-w-sm shadow-2xl text-center">
+                    <h3 className="text-xl font-bold text-white mb-2">Leave Game?</h3>
+                    <p className="text-gray-400 text-sm mb-6">You will be removed from this room.</p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setShowLeaveModal(false)}
+                            className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl transition"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={confirmLeave}
+                            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition"
+                        >
+                            Leave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     const renderBackground = () => (
@@ -177,6 +206,7 @@ function RoomController() {
     return (
         <div className="w-full max-w-md mx-auto p-4 md:p-0 animate-fade-in relative z-10 min-h-[60vh] flex flex-col justify-center">
             {renderBackground()}
+            <LeaveModal />
             <button
                 onClick={handleExit}
                 className="absolute top-0 left-0 md:-left-12 p-2 text-gray-400 hover:text-white transition-colors z-50 bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-md"
