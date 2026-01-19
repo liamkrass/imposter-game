@@ -11,6 +11,7 @@ function LocalGame({ onExit }) {
     const [secretWord, setSecretWord] = useState('');
     const [category, setCategory] = useState('');
     const [imposterIndex, setImposterIndex] = useState(null);
+    const [startPlayerIndex, setStartPlayerIndex] = useState(null);
 
     // Hub State
     const [seenPlayers, setSeenPlayers] = useState(new Set()); // Set of indices
@@ -30,6 +31,7 @@ function LocalGame({ onExit }) {
         setSecretWord(word);
         setCategory(category);
         setImposterIndex(Math.floor(Math.random() * players.length));
+        setStartPlayerIndex(Math.floor(Math.random() * players.length));
         setGameState('HUB');
         setSeenPlayers(new Set());
     };
@@ -229,25 +231,45 @@ function LocalGame({ onExit }) {
     }
 
     if (gameState === 'PLAYING') {
+        const startPlayerName = players[startPlayerIndex];
         return (
-            <div className="flex flex-col items-center gap-8 w-full max-w-md mx-auto p-6 animate-fade-in text-center relative z-10">
+            <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto p-6 animate-fade-in text-center relative z-10">
                 <BackgroundBlobs />
                 <h2 className="text-4xl font-black text-white mb-2">Discuss & Vote</h2>
-                <div className="glass-card px-8 py-3 rounded-full border border-white/10 shadow-lg">
-                    <p className="text-gray-300 font-medium">Category: <span className="text-blue-400 font-bold uppercase">{category}</span></p>
-                </div>
 
-                <div className="w-full glass-card p-6 rounded-3xl border border-white/5">
-                    <p className="text-sm text-gray-500 font-medium uppercase tracking-widest mb-4">Talking Phase</p>
-                    <div className="flex justify-center items-center h-20">
-                        <div className="animate-bounce text-4xl">🗣️</div>
+                <div className="w-full flex justify-center mb-4">
+                    <div className="glass-card px-8 py-3 rounded-full border border-white/10 shadow-lg flex items-center gap-3">
+                        <span className="text-gray-300 font-medium">Category:</span>
+                        <span className="text-blue-400 font-bold uppercase tracking-wider">{category}</span>
                     </div>
                 </div>
 
-                <div className="mt-4">
+                <div className="w-full glass-card p-6 rounded-3xl border border-white/5 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
+
+                    <p className="text-sm text-gray-500 font-bold uppercase tracking-[0.2em] mb-6">First Question</p>
+
+                    <div className="flex flex-col items-center justify-center gap-4">
+                        <div className="relative">
+                            <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/30 animate-[spin_10s_linear_infinite]">
+                                <span className="text-3xl animate-[spin_10s_linear_infinite_reverse]">🎲</span>
+                            </div>
+                            <div className="absolute -bottom-2 right-0 bg-white text-black text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-300 shadow-sm">
+                                STARTS
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-white font-black text-3xl tracking-tight">{startPlayerName}</p>
+                            <p className="text-blue-200/60 text-sm font-medium mt-1">starts the discussion</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-4 w-full">
                     <button
                         onClick={revealImposter}
-                        className="bg-gradient-to-r from-red-600 to-pink-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg shadow-red-500/30 transition transform hover:scale-105 active:scale-95 border border-red-500/30"
+                        className="w-full bg-gradient-to-r from-red-600 to-pink-700 text-white font-bold py-4 px-10 rounded-2xl shadow-lg shadow-red-500/30 transition transform hover:scale-[1.02] active:scale-95 border border-red-500/30"
                     >
                         Reveal Imposter
                     </button>

@@ -1,36 +1,8 @@
 import React, { useState } from 'react';
-import socket from '../socket';
 import LocalGame from './LocalGame';
 
-function Landing({ setRoom, setPlayerName, setError }) {
-    const [name, setName] = useState('');
-    const [joinCode, setJoinCode] = useState('');
-    const [mode, setMode] = useState('menu'); // menu, join, local
-
-    const handleCreate = () => {
-        if (!name.trim()) return setError('Please enter a name');
-        setPlayerName(name);
-        socket.emit('create_room', name, (response) => {
-            if (response.success) {
-                setRoom(response.room);
-            } else {
-                setError(response.message);
-            }
-        });
-    };
-
-    const handleJoin = () => {
-        if (!name.trim()) return setError('Please enter a name');
-        if (!joinCode.trim()) return setError('Please enter a room code');
-        setPlayerName(name);
-        socket.emit('join_room', { code: joinCode.toUpperCase(), playerName: name }, (response) => {
-            if (response.success) {
-                setRoom(response.room);
-            } else {
-                setError(response.message);
-            }
-        });
-    };
+function Landing() {
+    const [mode, setMode] = useState('menu'); // menu, local
 
     if (mode === 'local') {
         return <LocalGame onExit={() => setMode('menu')} />;
@@ -47,16 +19,6 @@ function Landing({ setRoom, setPlayerName, setError }) {
             </div>
 
             <div className="glass-card rounded-3xl p-8 w-full flex flex-col gap-6">
-
-                <div className="relative">
-                    <input
-                        type="text"
-                        placeholder="Your Name"
-                        className="glass-input w-full p-4 rounded-2xl text-center font-bold text-lg outline-none"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                    />
-                </div>
 
                 {mode === 'menu' && (
                     <div className="flex flex-col gap-3">
