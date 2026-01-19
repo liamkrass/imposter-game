@@ -8,6 +8,7 @@ class Room {
         this.category = '';
         this.votes = {}; // playerId -> voteCount
         this.winner = null;
+        this.usedWords = [];
     }
 
     addPlayer(id, name) {

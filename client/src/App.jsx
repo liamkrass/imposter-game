@@ -46,9 +46,7 @@ function App() {
   return (
     <div className="min-h-screen bg-dark text-white flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md bg-dark-lighter p-6 rounded-xl shadow-2xl border border-gray-700">
-        <h1 className="text-4xl font-bold text-center mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-          IMPOSTER
-        </h1>
+
         {error && (
           <div className="bg-red-500/20 text-red-200 p-3 rounded mb-4 text-center">
             {error}

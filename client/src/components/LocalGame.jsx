@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
-import { getRandomWord } from '../words';
+import { getRandomWord, wordList } from '../words';
 
 function LocalGame({ onExit }) {
     // Game Configuration
     const [players, setPlayers] = useState([]);
     const [inputValue, setInputValue] = useState('');
+    const [selectedCategories, setSelectedCategories] = useState(wordList.map(c => c.category));
+    const [imposterCount, setImposterCount] = useState(1);
+    const [chaosMode, setChaosMode] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+
+    // Custom Category State
+    const [customWordsList, setCustomWordsList] = useState([]);
+    const [isEditingCustom, setIsEditingCustom] = useState(false);
+    const [customInput, setCustomInput] = useState('');
 
     // Game State
     const [gameState, setGameState] = useState('SETUP'); // SETUP, HUB, REVEAL_MODAL, PLAYING, END
     const [secretWord, setSecretWord] = useState('');
     const [category, setCategory] = useState('');
-    const [imposterIndex, setImposterIndex] = useState(null);
+    const [imposterIndices, setImposterIndices] = useState([]);
     const [startPlayerIndex, setStartPlayerIndex] = useState(null);
 
     // Hub State
@@ -25,12 +34,71 @@ function LocalGame({ onExit }) {
         }
     };
 
+    const toggleCategory = (cat) => {
+        if (selectedCategories.includes(cat)) {
+            setSelectedCategories(selectedCategories.filter(c => c !== cat));
+        } else {
+            setSelectedCategories([...selectedCategories, cat]);
+        }
+    };
+
+    const saveCustomWords = () => {
+        const words = customInput.split(/[\n,]+/).map(w => w.trim()).filter(w => w.length > 0);
+        if (words.length > 0) {
+            setCustomWordsList(words);
+            // Auto-select Custom category if not selected
+            if (!selectedCategories.includes('Custom')) {
+                setSelectedCategories([...selectedCategories, 'Custom']);
+            }
+        } else {
+            // If cleared, remove Custom category
+            if (selectedCategories.includes('Custom')) {
+                setSelectedCategories(selectedCategories.filter(c => c !== 'Custom'));
+            }
+            setCustomWordsList([]);
+        }
+        setIsEditingCustom(false);
+    };
+
+    const openCustomEditor = () => {
+        setCustomInput(customWordsList.join('\n'));
+        setIsEditingCustom(true);
+        setShowSettings(false); // Close settings if open
+    };
+
     const startGame = () => {
-        if (players.length < 3) return;
-        const { word, category } = getRandomWord();
+        if (players.length < 3 || selectedCategories.length === 0) return;
+
+        // Pass customWordsList to getRandomWord
+        const { word, category } = getRandomWord(selectedCategories, customWordsList);
+
         setSecretWord(word);
         setCategory(category);
-        setImposterIndex(Math.floor(Math.random() * players.length));
+
+        // Select unique multiple imposters
+        const indices = new Set();
+        let targetImposters = imposterCount;
+
+        if (chaosMode) {
+            const roll = Math.random() * 100;
+            if (roll < 90) {
+                targetImposters = 1;
+            } else if (roll < 99) {
+                targetImposters = players.length > 8 ? 3 : 2;
+            } else {
+                targetImposters = players.length;
+            }
+        }
+
+        const safeCount = chaosMode && targetImposters === players.length
+            ? players.length
+            : Math.min(targetImposters, Math.max(1, players.length - 1));
+
+        while (indices.size < safeCount) {
+            indices.add(Math.floor(Math.random() * players.length));
+        }
+        setImposterIndices(Array.from(indices));
+
         setStartPlayerIndex(Math.floor(Math.random() * players.length));
         setGameState('HUB');
         setSeenPlayers(new Set());
@@ -58,6 +126,9 @@ function LocalGame({ onExit }) {
         setGameState('END');
     };
 
+    // Calculate max imposters allowed based on player count
+    const maxImposters = Math.max(1, Math.floor((players.length - 1) / 2));
+
     const BackgroundBlobs = () => (
         <>
             <div className="fixed top-0 left-0 -z-10 w-80 h-80 bg-purple-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-blob pointer-events-none"></div>
@@ -66,16 +137,162 @@ function LocalGame({ onExit }) {
         </>
     );
 
+    const CustomEditorModal = () => {
+        if (!isEditingCustom) return null;
+        return (
+            <div className="fixed inset-0 z-[70] bg-black/90 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
+                <div className="bg-dark-lighter border border-gray-700 p-6 rounded-3xl w-full max-w-md shadow-2xl relative flex flex-col h-[70vh]">
+                    <button
+                        onClick={() => setIsEditingCustom(false)}
+                        className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                    >
+                        ✕
+                    </button>
+                    <h3 className="text-xl font-bold text-white mb-2">Custom Words</h3>
+                    <p className="text-gray-400 text-sm mb-4">Enter words separated by newlines or commas.</p>
+
+                    <textarea
+                        className="flex-1 glass-input p-4 rounded-xl font-medium resize-none outline-none text-white/90 leading-relaxed"
+                        placeholder="Lion&#10;Pizza&#10;Spaceship&#10;..."
+                        value={customInput}
+                        onChange={(e) => setCustomInput(e.target.value)}
+                    />
+
+                    <button
+                        onClick={saveCustomWords}
+                        className="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold py-3 rounded-xl hover:scale-[1.02] transition shadow-lg shadow-blue-500/20"
+                    >
+                        Save & Use
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    const SettingsModal = () => {
+        if (!showSettings) return null;
+        return (
+            <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
+                <div className="bg-dark-lighter border border-gray-700 p-6 rounded-3xl w-full max-w-sm shadow-2xl relative">
+                    <button
+                        onClick={() => setShowSettings(false)}
+                        className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                    >
+                        ✕
+                    </button>
+                    <h3 className="text-xl font-bold text-white mb-6">Game Settings</h3>
+
+                    {/* Chaos Mode Toggle */}
+                    <div className="mb-6 bg-black/20 p-4 rounded-xl flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="text-red-400 font-bold uppercase tracking-wider text-sm">Chaos Mode</span>
+                            <div className="relative group">
+                                <span className="text-gray-400 cursor-help text-xs border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center">i</span>
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-6 w-48 bg-gray-800 text-xs text-gray-300 p-2 rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                    90% One Imposter<br />
+                                    9% Two Imposters<br />
+                                    1% Everyone is Imposter!
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setChaosMode(!chaosMode)}
+                            className={`w-12 h-6 rounded-full p-1 transition-colors ${chaosMode ? 'bg-red-500' : 'bg-gray-700'}`}
+                        >
+                            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${chaosMode ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
+                    </div>
+
+                    {/* Imposter Count Setting */}
+                    <div className={`mb-6 transition-opacity ${chaosMode ? 'opacity-30 pointer-events-none' : ''}`}>
+                        <label className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 block">Imposters</label>
+                        <div className="flex items-center gap-4 bg-black/20 p-2 rounded-xl">
+                            <button
+                                onClick={() => setImposterCount(Math.max(1, imposterCount - 1))}
+                                className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-xl font-bold"
+                            >
+                                -
+                            </button>
+                            <span className="flex-1 text-center text-2xl font-black text-white">{chaosMode ? '?' : imposterCount}</span>
+                            <button
+                                onClick={() => setImposterCount(imposterCount + 1)}
+                                className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-xl font-bold"
+                            >
+                                +
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Categories Setting */}
+                    <div>
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">Categories</span>
+                            <button onClick={openCustomEditor} className="text-blue-400 text-xs font-bold hover:text-blue-300">+ Edit Custom</button>
+                        </div>
+                        <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                            {wordList.map((c) => {
+                                const isSelected = selectedCategories.includes(c.category);
+                                return (
+                                    <button
+                                        key={c.category}
+                                        onClick={() => toggleCategory(c.category)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${isSelected
+                                            ? 'bg-blue-500 text-white border-blue-400'
+                                            : 'bg-white/5 text-gray-500 border-white/5 hover:bg-white/10'
+                                            }`}
+                                    >
+                                        {c.category}
+                                    </button>
+                                );
+                            })}
+                            {/* Custom Category Button */}
+                            <button
+                                onClick={() => customWordsList.length > 0 ? toggleCategory('Custom') : openCustomEditor()}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${selectedCategories.includes('Custom')
+                                    ? 'bg-purple-600 text-white border-purple-500 shadow-[0_0_10px_rgba(147,51,234,0.5)]'
+                                    : 'bg-white/5 text-purple-400 border-purple-500/30 hover:bg-purple-500/20'
+                                    }`}
+                            >
+                                Custom {customWordsList.length > 0 && `(${customWordsList.length})`}
+                            </button>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => setShowSettings(false)}
+                        className="w-full mt-8 bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition"
+                    >
+                        Done
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    const GearIcon = () => (
+        <button
+            onClick={() => setShowSettings(true)}
+            className="absolute top-6 right-6 z-40 text-white/50 hover:text-white transition-colors p-2"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+        </button>
+    );
+
     // --- RENDERERS ---
 
     if (gameState === 'SETUP') {
+        const canStart = players.length >= 3 && selectedCategories.length > 0;
+
         return (
             <div className="flex flex-col gap-6 w-full max-w-md mx-auto p-6 animate-fade-in relative z-10 text-center min-h-[60vh] justify-center">
                 <BackgroundBlobs />
+                <CustomEditorModal />
                 <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-500 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]">
                     Local Party
                 </h2>
-                <p className="text-blue-200/60 font-medium tracking-wide text-sm">Add at least 3 players to start</p>
 
                 <div className="glass-card rounded-3xl p-6 flex flex-col gap-4">
                     <div className="flex gap-2">
@@ -104,17 +321,81 @@ function LocalGame({ onExit }) {
                                 </button>
                             </li>
                         ))}
-                        {players.length === 0 && <span className="text-gray-500 text-sm italic py-2">No players added yet</span>}
+                        {players.length === 0 && <span className="text-gray-500 text-sm italic py-2">Add 3+ players</span>}
                     </ul>
+                </div>
+
+                <div className="glass-card rounded-2xl p-4 flex flex-col gap-4">
+                    {/* Settings in Setup */}
+                    <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                        <div className="flex items-center gap-2">
+                            <span className="text-red-400 font-bold text-xs uppercase">Chaos Mode</span>
+                            <div className="relative group">
+                                <span className="text-gray-400 cursor-help text-xs border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center">i</span>
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-6 w-48 bg-gray-800 text-xs text-gray-300 p-2 rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                    90% One Imposter<br />
+                                    9% Two Imposters<br />
+                                    1% Everyone is Imposter!
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setChaosMode(!chaosMode)}
+                            className={`w-10 h-5 rounded-full p-0.5 transition-colors ${chaosMode ? 'bg-red-500' : 'bg-gray-700'}`}
+                        >
+                            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${chaosMode ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
+                    </div>
+
+                    <div className={`flex items-center justify-between border-b border-white/5 pb-4 transition-opacity ${chaosMode ? 'opacity-30 pointer-events-none' : ''}`}>
+                        <span className="text-blue-200/60 font-bold text-xs uppercase">Imposters</span>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setImposterCount(Math.max(1, imposterCount - 1))}
+                                disabled={imposterCount <= 1}
+                                className="w-8 h-8 rounded bg-white/10 flex items-center justify-center font-bold disabled:opacity-30"
+                            >-</button>
+                            <span className="font-black w-4 text-center">{chaosMode ? '?' : imposterCount}</span>
+                            <button
+                                onClick={() => setImposterCount(Math.min(maxImposters || 1, imposterCount + 1))}
+                                disabled={imposterCount >= (maxImposters || 1)}
+                                className="w-8 h-8 rounded bg-white/10 flex items-center justify-center font-bold disabled:opacity-30"
+                            >+</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-blue-200/60 font-bold text-xs uppercase">Categories</span>
+                            <span className="text-xs text-gray-500">{selectedCategories.length} selected</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2 justify-center max-h-32 overflow-y-auto">
+                            {wordList.map((c) => {
+                                const isSelected = selectedCategories.includes(c.category);
+                                return (
+                                    <button
+                                        key={c.category}
+                                        onClick={() => toggleCategory(c.category)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${isSelected
+                                            ? 'bg-blue-500 text-white border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                                            : 'bg-white/5 text-gray-500 border-white/5 hover:bg-white/10'
+                                            }`}
+                                    >
+                                        {c.category}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex flex-col gap-3">
                     <button
                         onClick={startGame}
-                        disabled={players.length < 3}
-                        className={`w-full py-4 font-bold text-lg rounded-2xl transition-all shadow-lg border border-transparent ${players.length >= 3
-                                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-teal-500/30 hover:scale-[1.02] active:scale-95 border-teal-400/30'
-                                : 'bg-white/5 text-gray-500 cursor-not-allowed border-white/5'
+                        disabled={!canStart}
+                        className={`w-full py-4 font-bold text-lg rounded-2xl transition-all shadow-lg border border-transparent ${canStart
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-teal-500/30 hover:scale-[1.02] active:scale-95 border-teal-400/30'
+                            : 'bg-white/5 text-gray-500 cursor-not-allowed border-white/5'
                             }`}
                     >
                         Start Game
@@ -127,12 +408,20 @@ function LocalGame({ onExit }) {
         );
     }
 
+    // Common layout for active game states
+    const activeLayout = (content) => (
+        <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto p-6 animate-fade-in relative z-10 text-center min-h-[60vh] justify-center">
+            <BackgroundBlobs />
+            <GearIcon />
+            <SettingsModal />
+            {content}
+        </div>
+    );
+
     if (gameState === 'HUB') {
         const allSeen = seenPlayers.size === players.length;
-
-        return (
-            <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto p-6 animate-fade-in relative z-10 text-center">
-                <BackgroundBlobs />
+        return activeLayout(
+            <>
                 <h2 className="text-3xl font-black text-white">Tap Your Name</h2>
                 <p className="text-gray-400 font-medium mb-2">Check your secret role, then pass back.</p>
 
@@ -144,8 +433,8 @@ function LocalGame({ onExit }) {
                                 key={i}
                                 onClick={() => handlePlayerTap(i)}
                                 className={`p-6 rounded-2xl relative overflow-hidden transition-all shadow-lg border ${seen
-                                        ? 'bg-white/5 border-white/5 text-gray-500'
-                                        : 'glass-button hover:border-blue-400/50 hover:shadow-blue-500/20 text-xl font-black'
+                                    ? 'bg-white/5 border-white/5 text-gray-500'
+                                    : 'glass-button hover:border-blue-400/50 hover:shadow-blue-500/20 text-xl font-black'
                                     }`}
                             >
                                 {p}
@@ -161,20 +450,21 @@ function LocalGame({ onExit }) {
                     </p>
                     <button
                         onClick={startPlaying}
+                        disabled={!allSeen}
                         className={`w-full py-4 rounded-2xl font-bold text-lg transition-all shadow-lg border border-transparent ${allSeen
-                                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/40 animate-pulse hover:scale-[1.02] border-emerald-400/30'
-                                : 'bg-white/5 text-gray-600 border-white/5'
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-emerald-500/40 animate-pulse hover:scale-[1.02] border-emerald-400/30'
+                            : 'bg-white/5 text-gray-600 border-white/5 cursor-not-allowed'
                             }`}
                     >
                         Start Voting Phase
                     </button>
                 </div>
-            </div>
+            </>
         );
     }
 
     if (gameState === 'REVEAL_MODAL') {
-        const isImposter = viewingPlayerIndex === imposterIndex;
+        const isImposter = imposterIndices.includes(viewingPlayerIndex);
         const name = players[viewingPlayerIndex];
 
         return (
@@ -232,9 +522,8 @@ function LocalGame({ onExit }) {
 
     if (gameState === 'PLAYING') {
         const startPlayerName = players[startPlayerIndex];
-        return (
-            <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto p-6 animate-fade-in text-center relative z-10">
-                <BackgroundBlobs />
+        return activeLayout(
+            <>
                 <h2 className="text-4xl font-black text-white mb-2">Discuss & Vote</h2>
 
                 <div className="w-full flex justify-center mb-4">
@@ -244,7 +533,7 @@ function LocalGame({ onExit }) {
                     </div>
                 </div>
 
-                <div className="w-full glass-card p-6 rounded-3xl border border-white/5 relative overflow-hidden">
+                <div className="w-full glass-card p-5 md:p-8 rounded-3xl border border-white/5 relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
 
                     <p className="text-sm text-gray-500 font-bold uppercase tracking-[0.2em] mb-6">First Question</p>
@@ -274,21 +563,26 @@ function LocalGame({ onExit }) {
                         Reveal Imposter
                     </button>
                 </div>
-            </div>
+            </>
         );
     }
 
     if (gameState === 'END') {
-        const imposterName = players[imposterIndex];
-        return (
-            <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto p-6 animate-pop-in text-center relative z-10">
-                <BackgroundBlobs />
+        // Collect all imposter names
+        const imposterNames = imposterIndices.map(i => players[i]);
+
+        return activeLayout(
+            <>
                 <div className="animate-bounce">
                     <span className="text-8xl drop-shadow-2xl">🕵️‍♀️</span>
                 </div>
                 <div>
-                    <h2 className="text-xl text-gray-500 font-bold uppercase tracking-widest mb-2">The Imposter was</h2>
-                    <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-600 drop-shadow-sm">{imposterName}</h1>
+                    <h2 className="text-xl text-gray-500 font-bold uppercase tracking-widest mb-2">
+                        {imposterNames.length > 1 ? "The Imposters were" : "The Imposter was"}
+                    </h2>
+                    <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-pink-600 drop-shadow-sm leading-tight">
+                        {imposterNames.join(' & ')}
+                    </h1>
                 </div>
 
                 <div className="glass-card p-8 rounded-3xl w-full mt-4 border border-emerald-500/20 bg-emerald-900/10">
@@ -310,7 +604,7 @@ function LocalGame({ onExit }) {
                         Exit
                     </button>
                 </div>
-            </div>
+            </>
         );
     }
 

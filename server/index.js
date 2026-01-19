@@ -66,7 +66,14 @@ io.on('connection', (socket) => {
     socket.on('start_game', (code) => {
         const room = rooms.get(code);
         if (room) {
-            const { word, category } = getRandomWord();
+            const { word, category, reset } = getRandomWord(room.usedWords);
+
+            if (reset) {
+                room.usedWords = [word];
+            } else {
+                room.usedWords.push(word);
+            }
+
             if (room.startGame(word, category)) {
                 io.to(code).emit('room_update', room);
             }
