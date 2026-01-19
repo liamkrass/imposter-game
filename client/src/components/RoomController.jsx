@@ -142,7 +142,7 @@ function RoomController() {
                 </svg>
             </button>
             {room.gameState === 'LOBBY' && <Lobby room={room} playerName={playerName} />}
-            {room.gameState === 'GAME' && <Game room={room} playerName={playerName} />}
+            {room.gameState === 'PLAYING' && <Game room={room} playerName={playerName} />}
             {room.gameState === 'VOTING' && <Voting room={room} playerName={playerName} />}
             {room.gameState === 'RESULTS' && <Results room={room} playerName={playerName} />}
         </div>
