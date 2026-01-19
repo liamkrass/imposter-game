@@ -12,26 +12,37 @@ class Room {
     }
 
     addPlayer(id, name) {
-        // valid checks
         if (!name) return this.players;
 
-        // Smart Reconnect: If name exists, update the socket ID (assume reconnect)
+        // Smart Reconnect: If name exists, update the socket ID and connected status
         const existingPlayer = this.players.find(p => p.name.toUpperCase() === name.toUpperCase());
         if (existingPlayer) {
             existingPlayer.id = id;
-            // existingPlayer.isHost = existingPlayer.isHost; // Keep host status
+            existingPlayer.connected = true;
             return this.players;
         }
 
         const isHost = this.players.length === 0;
-        this.players.push({ id, name, role: null, vote: null, isHost });
+        this.players.push({ id, name, role: null, vote: null, isHost, connected: true });
         return this.players;
     }
 
+    disconnectPlayer(id) {
+        const player = this.players.find(p => p.id === id);
+        if (player) {
+            player.connected = false;
+        }
+        // Return true if ALL players are disconnected (room is empty of active users)
+        return this.players.every(p => !p.connected);
+    }
+
+    // Completely remove a player (optional, maybe for a future 'Leave' button)
     removePlayer(id) {
         this.players = this.players.filter(p => p.id !== id);
-        if (this.players.length > 0 && !this.players.some(p => p.isHost)) {
-            this.players[0].isHost = true; // Assign new host
+        if (this.players.length > 0 && !this.players.some(p => p.isHost && p.connected)) {
+            // Try to find a connected player to be host
+            const nextHost = this.players.find(p => p.connected) || this.players[0];
+            if (nextHost) nextHost.isHost = true;
         }
     }
 

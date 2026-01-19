@@ -119,22 +119,25 @@ io.on('connection', (socket) => {
         for (const [code, room] of rooms.entries()) {
             const player = room.getPlayer(socket.id);
             if (player) {
-                room.removePlayer(socket.id);
-                room.removePlayer(socket.id);
+                // Soft Disconnect: Mark as offline but KEEP in room array
+                const allOffline = room.disconnectPlayer(socket.id);
 
-                if (room.players.length === 0) {
-                    // Grace Period: Don't delete immediately. Wait 60s.
-                    // If someone joins back, cancel deletion.
-                    console.log(`Room ${code} is empty. Scheduling deletion in 60s...`);
+                io.to(code).emit('room_update', room);
+
+                if (allOffline) {
+                    // Start Grace Period ONLY if everyone is offline
+                    console.log(`Room ${code} is effectively empty (all offline). Scheduling deletion in 60s...`);
 
                     room.deleteTimeout = setTimeout(() => {
-                        if (rooms.has(code) && rooms.get(code).players.length === 0) {
-                            rooms.delete(code);
-                            console.log(`Room ${code} deleted (inactive).`);
+                        // Double check if everyone is still offline
+                        if (rooms.has(code)) {
+                            const r = rooms.get(code);
+                            if (r.players.every(p => !p.connected)) {
+                                rooms.delete(code);
+                                console.log(`Room ${code} deleted (inactive).`);
+                            }
                         }
                     }, 60000); // 60 seconds grace period
-                } else {
-                    io.to(code).emit('room_update', room);
                 }
                 break;
             }
