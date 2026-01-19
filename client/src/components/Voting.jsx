@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import socket from '../socket';
 
 function Voting({ room, playerName }) {
-    const [voted, setVoted] = useState(false);
+    // Derive voted state from room players list (synced from server)
+    const self = room.players.find(p => p.name === playerName);
+    const hasVoted = self?.vote !== null && self?.vote !== undefined;
 
     const handleVote = (targetId) => {
+        if (hasVoted) return; // Prevent double voting
         socket.emit('vote', { code: room.code, voteId: targetId });
-        setVoted(true);
     };
 
     return (
         <div className="w-full flex flex-col items-center gap-6">
             <h2 className="text-3xl font-bold text-white mb-4">Who is the Imposter?</h2>
 
-            {!voted ? (
+            {!hasVoted ? (
                 <div className="grid grid-cols-1 gap-3 w-full">
                     {room.players.map((p) => {
                         if (p.name === playerName) return null; // Can't vote for self? usually yes, or skip rendering.
