@@ -509,6 +509,7 @@ function LocalGame({ onExit }) {
             <TrophyIcon />
             <SettingsModal />
             <LeaderboardModal />
+            <CustomEditorModal />
             {content}
         </div>
     );
