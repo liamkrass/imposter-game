@@ -8,7 +8,7 @@ function LocalGame({ onExit }) {
     const [selectedCategories, setSelectedCategories] = useState(wordList.map(c => c.category));
     const [imposterCount, setImposterCount] = useState(1);
     const [chaosMode, setChaosMode] = useState(false);
-    const [chaosMode, setChaosMode] = useState(false);
+
     const [showSettings, setShowSettings] = useState(false);
     const [showLeaderboard, setShowLeaderboard] = useState(false);
 
