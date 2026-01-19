@@ -12,19 +12,19 @@ class Room {
     }
 
     addPlayer(id, name) {
-        if (!name) return this.players;
+        if (!name) return false; // Failed to add
 
         // Smart Reconnect: If name exists, update the socket ID and connected status
         const existingPlayer = this.players.find(p => p.name.toUpperCase() === name.toUpperCase());
         if (existingPlayer) {
             existingPlayer.id = id;
             existingPlayer.connected = true;
-            return this.players;
+            return true; // Success
         }
 
         const isHost = this.players.length === 0;
         this.players.push({ id, name, role: null, vote: null, isHost, connected: true });
-        return this.players;
+        return true; // Success
     }
 
     disconnectPlayer(id) {

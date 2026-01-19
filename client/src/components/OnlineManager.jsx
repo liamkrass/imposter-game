@@ -41,11 +41,11 @@ function OnlineManager({ onExit }) {
     }, [playerName, roomCode]);
 
     useEffect(() => {
-        // Auto-join when code is 4 chars
-        if (roomCode.length === 4 && !room) { // check !room so we don't spam join
+        // Auto-join when code is 4 chars (and we have a name and not already in room)
+        if (roomCode.length === 4 && playerName && !room) {
             joinRoom();
         }
-    }, [roomCode]);
+    }, [roomCode, playerName]);
 
     useEffect(() => {
         // Connect when entering online mode

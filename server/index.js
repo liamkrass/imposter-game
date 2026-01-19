@@ -60,7 +60,11 @@ io.on('connection', (socket) => {
             console.log(`Deletion cancelled for room ${code}`);
         }
 
-        room.addPlayer(socket.id, playerName);
+        const added = room.addPlayer(socket.id, playerName);
+        if (!added) {
+            return callback({ success: false, message: "Invalid Name" });
+        }
+
         socket.join(code);
 
         // Notify others
