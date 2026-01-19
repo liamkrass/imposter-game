@@ -4,6 +4,7 @@ import socket from '../socket';
 function Lobby({ room, playerName, lastUpdate, onForceSync }) {
     const isHost = room.players.find(p => p.name === playerName)?.isHost;
     const [showSettings, setShowSettings] = useState(false);
+    const [showLeaderboard, setShowLeaderboard] = useState(false);
 
     // Defaults for settings (in case server hasn't set them yet)
     const imposterCount = room.imposterCount ?? 1;
@@ -138,11 +139,71 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
         );
     };
 
+    // Leaderboard Modal
+    const LeaderboardModal = () => {
+        if (!showLeaderboard) return null;
+        const scores = room.scores || {};
+        const sortedPlayers = room.players
+            .map(p => ({ name: p.name, score: scores[p.name] || 0 }))
+            .sort((a, b) => b.score - a.score);
+
+        return (
+            <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
+                <div className="glass-card border border-gray-700 p-6 rounded-3xl w-full max-w-sm shadow-2xl relative">
+                    <button
+                        onClick={() => setShowLeaderboard(false)}
+                        className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                    >
+                        ✕
+                    </button>
+
+                    <h3 className="text-xl font-bold text-white mb-6 text-center">🏆 Leaderboard</h3>
+
+                    <div className="rounded-2xl overflow-hidden border border-white/5 bg-black/20">
+                        {sortedPlayers.length > 0 ? sortedPlayers.map((p, i) => (
+                            <div key={p.name} className={`flex items-center justify-between px-4 py-3 ${i !== sortedPlayers.length - 1 ? 'border-b border-white/5' : ''}`}>
+                                <div className="flex items-center gap-3">
+                                    <span className={`font-black w-6 text-center ${i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-amber-600' : 'text-gray-600'}`}>{i + 1}</span>
+                                    <span className="text-white font-bold">{p.name}</span>
+                                </div>
+                                <span className="text-emerald-400 font-black">{p.score} pts</span>
+                            </div>
+                        )) : (
+                            <p className="p-4 text-center text-gray-500 text-sm">No scores yet! Play a game.</p>
+                        )}
+                    </div>
+
+                    <button
+                        onClick={() => setShowLeaderboard(false)}
+                        className="w-full mt-6 bg-white text-black font-bold py-3 rounded-xl hover:bg-gray-200 transition"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto animate-fade-in relative z-10">
             <SettingsModal />
+            <LeaderboardModal />
 
-            {/* Settings Button (Host Only) */}
+            {/* Trophy Button */}
+            <button
+                onClick={() => setShowLeaderboard(true)}
+                className="absolute top-0 left-0 p-2 text-white/50 hover:text-yellow-400 transition-colors z-50"
+                title="Leaderboard"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                    <path d="M4 22h16"></path>
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+                </svg>
+            </button>
             {isHost && (
                 <button
                     onClick={() => setShowSettings(true)}

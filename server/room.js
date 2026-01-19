@@ -9,12 +9,13 @@ class Room {
         this.votes = {}; // playerId -> voteCount
         this.winner = null;
         this.usedWords = [];
+        this.scores = {}; // playerName -> points
 
         // Host Settings
         this.imposterCount = 1;
         this.public = true; // Visible in Active Lobbies?
         this.chaosMode = false;
-        this.selectedCategories = ['Animals', 'Food', 'Movies', 'Sports', 'Countries', 'Technology', 'Music', 'Brands'];
+        this.selectedCategories = ['Animals', 'Food', 'Jobs', 'Objects', 'Places'];
     }
 
     addPlayer(id, name) {
@@ -131,12 +132,23 @@ class Room {
         }
 
         const suspect = this.getPlayer(suspectId);
-        const imposter = this.players.find(p => p.role === 'IMPOSTER');
+        const imposters = this.players.filter(p => p.role === 'IMPOSTER');
 
+        // Determine winner
         if (suspect && suspect.role === 'IMPOSTER') {
             this.winner = 'CIVILIANS';
+            // Civilians win: +1 to all civilians
+            this.players.forEach(p => {
+                if (p.role !== 'IMPOSTER') {
+                    this.scores[p.name] = (this.scores[p.name] || 0) + 1;
+                }
+            });
         } else {
             this.winner = 'IMPOSTER';
+            // Imposters win: +3 to all imposters
+            imposters.forEach(imposter => {
+                this.scores[imposter.name] = (this.scores[imposter.name] || 0) + 3;
+            });
         }
     }
 
