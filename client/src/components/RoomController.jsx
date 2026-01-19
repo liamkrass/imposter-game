@@ -116,6 +116,27 @@ function RoomController() {
         );
     }
 
+    const [showRetry, setShowRetry] = useState(false);
+
+    useEffect(() => {
+        let timer;
+        if (!room || !connected) {
+            timer = setTimeout(() => {
+                setShowRetry(true);
+            }, 5000); // Show retry after 5s of stuck loading
+        } else {
+            setShowRetry(false);
+        }
+        return () => clearTimeout(timer);
+    }, [room, connected]);
+
+    const handleRetry = () => {
+        setConnected(false);
+        socket.disconnect();
+        socket.connect();
+        window.location.reload(); // Hard reload is safest for persistent socket issues
+    };
+
     if (!room || !connected) {
         return (
             <div className="min-h-[60vh] w-full flex items-center justify-center p-4 relative z-10">
@@ -124,6 +145,15 @@ function RoomController() {
                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                     <h2 className="text-xl font-bold text-white">Joining Room {roomCode}...</h2>
                     <p className="text-sm text-gray-400">Connecting to server</p>
+
+                    {showRetry && (
+                        <button
+                            onClick={handleRetry}
+                            className="mt-4 px-4 py-2 bg-yellow-600/20 text-yellow-500 border border-yellow-500/50 rounded-lg hover:bg-yellow-600/30 transition animate-fade-in font-bold text-sm"
+                        >
+                            Stuck? Tap to Retry
+                        </button>
+                    )}
                 </div>
             </div>
         );
