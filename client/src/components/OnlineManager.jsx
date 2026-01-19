@@ -48,6 +48,7 @@ function OnlineManager({ onExit }) {
         socket.emit('create_room', playerName, (response) => {
             if (response.success) {
                 setRoom(response.room);
+                setRoomCode(response.code); // CRITICAL: Save code for auto-rejoin
                 setStep('ROOM');
             } else {
                 setError('Failed to create room');
