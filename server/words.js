@@ -150,18 +150,15 @@ const wordList = [
 ];
 
 
-function getRandomWord(usedWords = []) {
-    // 1. Flatten all words to check total availability vs used
-    // This is a bit inefficient if called often but fine for this scale.
-    // Better: Pick category, then pick word, retry if used.
-
-    // Let's try to pick a random category first, then a random word from it.
-    // If that word is used, try again.
-    // To avoid infinite loops, we should filter available words first.
+function getRandomWord(usedWords = [], selectedCategories = null) {
+    // Filter by selected categories if provided
+    const categoriesToUse = selectedCategories && selectedCategories.length > 0
+        ? wordList.filter(cat => selectedCategories.includes(cat.category))
+        : wordList;
 
     let availableWords = [];
 
-    wordList.forEach(cat => {
+    categoriesToUse.forEach(cat => {
         cat.words.forEach(w => {
             if (!usedWords.includes(w)) {
                 availableWords.push({ word: w, category: cat.category });
@@ -170,15 +167,8 @@ function getRandomWord(usedWords = []) {
     });
 
     if (availableWords.length === 0) {
-        // All words used! Reset logic handled by caller or just return a random one
-        // For now, let's just return a random one (soft fail) or we could return null.
-        // The user request "cant appear twice" implies hard constraint. 
-        // If we strictly cannot appear twice, and we ran out, we MUST reset or notify.
-        // Let's assume we reset the session's used words in the caller if we get a special return,
-        // OR we just pick from the full list again (effectively resetting internal availability).
-
-        // Let's just pick from full list if empty, effectively auto-resetting when exhausted.
-        const categoryObj = wordList[Math.floor(Math.random() * wordList.length)];
+        // All words used! Reset by picking from full list
+        const categoryObj = categoriesToUse[Math.floor(Math.random() * categoriesToUse.length)];
         const word = categoryObj.words[Math.floor(Math.random() * categoryObj.words.length)];
         return { word, category: categoryObj.category, reset: true };
     }

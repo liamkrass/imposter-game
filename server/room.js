@@ -13,6 +13,8 @@ class Room {
         // Host Settings
         this.imposterCount = 1;
         this.public = true; // Visible in Active Lobbies?
+        this.chaosMode = false;
+        this.selectedCategories = ['Animals', 'Food', 'Movies', 'Sports', 'Countries', 'Technology', 'Music', 'Brands'];
     }
 
     addPlayer(id, name) {

@@ -75,10 +75,16 @@ io.on('connection', (socket) => {
         if (settings.public !== undefined) {
             room.public = settings.public;
         }
+        if (settings.chaosMode !== undefined) {
+            room.chaosMode = settings.chaosMode;
+        }
+        if (settings.selectedCategories !== undefined) {
+            room.selectedCategories = settings.selectedCategories;
+        }
 
         // Broadcast update
         io.to(code).emit('room_update', room);
-        console.log(`Settings updated for room ${code}: imposters=${room.imposterCount}, public=${room.public}`);
+        console.log(`Settings updated for room ${code}`);
     });
 
     socket.on('join_room', ({ code, playerName }, callback) => {
@@ -121,12 +127,25 @@ io.on('connection', (socket) => {
     socket.on('start_game', (code) => {
         const room = rooms.get(code);
         if (room) {
-            const { word, category, reset } = getRandomWord(room.usedWords);
+            // Pass selected categories to word generator
+            const { word, category, reset } = getRandomWord(room.usedWords, room.selectedCategories);
 
             if (reset) {
                 room.usedWords = [word];
             } else {
                 room.usedWords.push(word);
+            }
+
+            // Chaos mode: randomize imposter count
+            if (room.chaosMode) {
+                const roll = Math.random() * 100;
+                if (roll < 90) {
+                    room.imposterCount = 1;
+                } else if (roll < 99) {
+                    room.imposterCount = room.players.length > 8 ? 3 : 2;
+                } else {
+                    room.imposterCount = room.players.length; // Everyone is imposter!
+                }
             }
 
             if (room.startGame(word, category)) {

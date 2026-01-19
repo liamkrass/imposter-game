@@ -19,12 +19,27 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
 
     const maxImposters = Math.max(1, Math.floor((room.players.length - 1) / 2));
 
+    // Available categories
+    const allCategories = ['Animals', 'Food', 'Jobs', 'Objects', 'Places'];
+    const selectedCategories = room.selectedCategories ?? allCategories;
+    const chaosMode = room.chaosMode ?? false;
+
+    const toggleCategory = (cat) => {
+        const newCategories = selectedCategories.includes(cat)
+            ? selectedCategories.filter(c => c !== cat)
+            : [...selectedCategories, cat];
+        // Don't allow empty categories
+        if (newCategories.length > 0) {
+            updateSettings({ selectedCategories: newCategories });
+        }
+    };
+
     // Settings Modal
     const SettingsModal = () => {
         if (!showSettings) return null;
         return (
             <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
-                <div className="glass-card border border-gray-700 p-6 rounded-3xl w-full max-w-sm shadow-2xl relative">
+                <div className="glass-card border border-gray-700 p-6 rounded-3xl w-full max-w-sm shadow-2xl relative max-h-[85vh] overflow-y-auto">
                     <button
                         onClick={() => setShowSettings(false)}
                         className="absolute top-4 right-4 text-gray-400 hover:text-white"
@@ -33,8 +48,29 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
                     </button>
                     <h3 className="text-xl font-bold text-white mb-6">Room Settings</h3>
 
-                    {/* Imposter Count */}
-                    <div className="mb-6">
+                    {/* Chaos Mode Toggle */}
+                    <div className="mb-6 bg-black/20 p-4 rounded-xl flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <span className="text-red-400 font-bold uppercase tracking-wider text-sm">Chaos Mode</span>
+                            <div className="relative group">
+                                <span className="text-gray-400 cursor-help text-xs border border-gray-600 rounded-full w-4 h-4 flex items-center justify-center">i</span>
+                                <div className="absolute left-1/2 -translate-x-1/2 bottom-6 w-48 bg-gray-800 text-xs text-gray-300 p-2 rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                    90% One Imposter<br />
+                                    9% Two Imposters<br />
+                                    1% Everyone is Imposter!
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => updateSettings({ chaosMode: !chaosMode })}
+                            className={`w-12 h-6 rounded-full p-1 transition-colors ${chaosMode ? 'bg-red-500' : 'bg-gray-700'}`}
+                        >
+                            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${chaosMode ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
+                    </div>
+
+                    {/* Imposter Count (disabled in chaos mode) */}
+                    <div className={`mb-6 transition-opacity ${chaosMode ? 'opacity-30 pointer-events-none' : ''}`}>
                         <label className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2 block">Imposters</label>
                         <div className="flex items-center gap-4 bg-black/20 p-2 rounded-xl">
                             <button
@@ -44,7 +80,7 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
                             >
                                 -
                             </button>
-                            <span className="flex-1 text-center text-2xl font-black text-white">{imposterCount}</span>
+                            <span className="flex-1 text-center text-2xl font-black text-white">{chaosMode ? '?' : imposterCount}</span>
                             <button
                                 onClick={() => updateSettings({ imposterCount: Math.min(maxImposters, imposterCount + 1) })}
                                 disabled={imposterCount >= maxImposters}
@@ -52,6 +88,31 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
                             >
                                 +
                             </button>
+                        </div>
+                    </div>
+
+                    {/* Categories Selection */}
+                    <div className="mb-6">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">Categories</span>
+                            <span className="text-xs text-gray-500">{selectedCategories.length} selected</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {allCategories.map((cat) => {
+                                const isSelected = selectedCategories.includes(cat);
+                                return (
+                                    <button
+                                        key={cat}
+                                        onClick={() => toggleCategory(cat)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${isSelected
+                                            ? 'bg-blue-500 text-white border-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]'
+                                            : 'bg-white/5 text-gray-500 border-white/5 hover:bg-white/10'
+                                            }`}
+                                    >
+                                        {cat}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
