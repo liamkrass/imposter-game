@@ -1,4 +1,5 @@
 import OnlineManager from './OnlineManager';
+import LocalGame from './LocalGame';
 
 function Landing() {
     const [mode, setMode] = useState('menu'); // menu, local, online
