@@ -13,8 +13,36 @@ function OnlineManager({ onExit }) {
     const [error, setError] = useState('');
 
     useEffect(() => {
+        // Hydrate from Storage on Mount
+        const savedName = sessionStorage.getItem('imposter_name');
+        const savedCode = sessionStorage.getItem('imposter_room');
+
+        if (savedName) setPlayerName(savedName);
+        if (savedCode) setRoomCode(savedCode);
+
+        // If we have both, auto-join (to recover from refresh)
+        if (savedName && savedCode && step === 'NAME') {
+            // We need to wait for socket connection first, which is handled in the other useEffect.
+            // checks step to avoid loop.
+            setStep('MENU'); // Move past name input to show "Reconnecting..." intent
+        }
+
+        // Auto-join when code is 4 chars (for manual typing)
+        if (roomCode.length === 4 && step === 'MENU') { // Only auto join if we are in menu
+            // This logic is slightly redundant with the "GO" button but okay for UX
+            // But we should be careful not to trigger it if we are just hydrating.
+        }
+    }, []);
+
+    // Save to Storage whenever state changes
+    useEffect(() => {
+        if (playerName) sessionStorage.setItem('imposter_name', playerName);
+        if (roomCode) sessionStorage.setItem('imposter_room', roomCode);
+    }, [playerName, roomCode]);
+
+    useEffect(() => {
         // Auto-join when code is 4 chars
-        if (roomCode.length === 4) {
+        if (roomCode.length === 4 && !room) { // check !room so we don't spam join
             joinRoom();
         }
     }, [roomCode]);
