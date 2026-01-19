@@ -67,10 +67,13 @@ io.on('connection', (socket) => {
             return callback({ success: false, message: "Invalid Name" });
         }
 
+        // Notify others
         socket.join(code);
 
-        // Notify others
-        // Notify others
+        // Debug: Log room size
+        const roomSize = io.sockets.adapter.rooms.get(code)?.size || 0;
+        console.log(`Socket ${socket.id} joined room ${code}. Total sockets in room: ${roomSize}`);
+
         io.to(code).emit('room_update', room);
         console.log(`Broadcasted update to room ${code}. Players: ${room.players.map(p => p.name).join(', ')}`);
 

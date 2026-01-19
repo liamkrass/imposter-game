@@ -37,8 +37,8 @@ function Lobby({ room, playerName }) {
                         <li
                             key={p.id}
                             className={`flex justify-between items-center p-3 rounded-xl border transition-all ${p.name === playerName
-                                    ? "bg-white/10 border-blue-500/30"
-                                    : "bg-black/20 border-white/5"
+                                ? "bg-white/10 border-blue-500/30"
+                                : "bg-black/20 border-white/5"
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -73,8 +73,8 @@ function Lobby({ room, playerName }) {
                     onClick={handleStart}
                     disabled={room.players.length < 3}
                     className={`w-full py-5 rounded-2xl font-black text-xl transition-all relative overflow-hidden group ${room.players.length >= 3
-                            ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 shadow-xl shadow-purple-500/30 hover:scale-[1.02] active:scale-95 text-white cursor-pointer'
-                            : 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-50'
+                        ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 shadow-xl shadow-purple-500/30 hover:scale-[1.02] active:scale-95 text-white cursor-pointer'
+                        : 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-50'
                         }`}
                 >
                     {room.players.length >= 3 && (
@@ -92,6 +92,12 @@ function Lobby({ room, playerName }) {
                     </div>
                 </div>
             )}
+            {/* Debug Footer */}
+            <div className="w-full text-center mt-8 pt-4 border-t border-white/5">
+                <p className="text-[10px] font-mono text-gray-600 uppercase tracking-widest">
+                    DEBUG: {socket.id ? socket.id.slice(0, 4) : 'DISC'} | {socket.connected ? 'CONN' : 'OFF'} | LATENCY: {socket.io?.engine?.transport?.name}
+                </p>
+            </div>
         </div>
     );
 }
