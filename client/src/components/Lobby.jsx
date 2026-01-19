@@ -24,6 +24,7 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
     const allCategories = ['Animals', 'Food', 'Jobs', 'Objects', 'Places'];
     const selectedCategories = room.selectedCategories ?? allCategories;
     const chaosMode = room.chaosMode ?? false;
+    const customWords = room.customWords ?? [];
 
     const toggleCategory = (cat) => {
         const newCategories = selectedCategories.includes(cat)
@@ -115,6 +116,24 @@ function Lobby({ room, playerName, lastUpdate, onForceSync }) {
                                 );
                             })}
                         </div>
+                    </div>
+
+                    {/* Custom Words */}
+                    <div className="mb-6">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">Custom Words</span>
+                            <span className="text-xs text-purple-400">{customWords.length} words</span>
+                        </div>
+                        <textarea
+                            className="w-full bg-black/20 border border-white/10 rounded-xl p-3 text-white text-sm resize-none h-24 focus:outline-none focus:border-purple-500/50"
+                            placeholder="Enter custom words (one per line)..."
+                            value={customWords.join('\n')}
+                            onChange={(e) => {
+                                const words = e.target.value.split('\n').map(w => w.trim()).filter(w => w.length > 0);
+                                updateSettings({ customWords: words });
+                            }}
+                        />
+                        <p className="text-[10px] text-gray-500 mt-1">Words appear under "Custom" category</p>
                     </div>
 
                     {/* Public Toggle */}

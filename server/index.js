@@ -81,6 +81,9 @@ io.on('connection', (socket) => {
         if (settings.selectedCategories !== undefined) {
             room.selectedCategories = settings.selectedCategories;
         }
+        if (settings.customWords !== undefined) {
+            room.customWords = settings.customWords;
+        }
 
         // Broadcast update
         io.to(code).emit('room_update', room);
@@ -127,8 +130,8 @@ io.on('connection', (socket) => {
     socket.on('start_game', (code) => {
         const room = rooms.get(code);
         if (room) {
-            // Pass selected categories to word generator
-            const { word, category, reset } = getRandomWord(room.usedWords, room.selectedCategories);
+            // Pass selected categories and custom words to word generator
+            const { word, category, reset } = getRandomWord(room.usedWords, room.selectedCategories, room.customWords);
 
             if (reset) {
                 room.usedWords = [word];

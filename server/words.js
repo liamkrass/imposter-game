@@ -150,7 +150,7 @@ const wordList = [
 ];
 
 
-function getRandomWord(usedWords = [], selectedCategories = null) {
+function getRandomWord(usedWords = [], selectedCategories = null, customWords = []) {
     // Filter by selected categories if provided
     const categoriesToUse = selectedCategories && selectedCategories.length > 0
         ? wordList.filter(cat => selectedCategories.includes(cat.category))
@@ -158,6 +158,7 @@ function getRandomWord(usedWords = [], selectedCategories = null) {
 
     let availableWords = [];
 
+    // Add words from selected categories
     categoriesToUse.forEach(cat => {
         cat.words.forEach(w => {
             if (!usedWords.includes(w)) {
@@ -166,8 +167,21 @@ function getRandomWord(usedWords = [], selectedCategories = null) {
         });
     });
 
+    // Add custom words if provided
+    if (customWords && customWords.length > 0) {
+        customWords.forEach(w => {
+            if (!usedWords.includes(w)) {
+                availableWords.push({ word: w, category: 'Custom' });
+            }
+        });
+    }
+
     if (availableWords.length === 0) {
-        // All words used! Reset by picking from full list
+        // All words used! Reset by picking from available
+        if (customWords && customWords.length > 0) {
+            const word = customWords[Math.floor(Math.random() * customWords.length)];
+            return { word, category: 'Custom', reset: true };
+        }
         const categoryObj = categoriesToUse[Math.floor(Math.random() * categoriesToUse.length)];
         const word = categoryObj.words[Math.floor(Math.random() * categoryObj.words.length)];
         return { word, category: categoryObj.category, reset: true };

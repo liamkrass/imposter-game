@@ -16,6 +16,7 @@ class Room {
         this.public = true; // Visible in Active Lobbies?
         this.chaosMode = false;
         this.selectedCategories = ['Animals', 'Food', 'Jobs', 'Objects', 'Places'];
+        this.customWords = []; // Custom words list
     }
 
     addPlayer(id, name) {
