@@ -53,6 +53,13 @@ io.on('connection', (socket) => {
             return callback({ success: false, message: "Game already started" });
         }
 
+        // Cancel pending deletion if room is being rejoined
+        if (room.deleteTimeout) {
+            clearTimeout(room.deleteTimeout);
+            room.deleteTimeout = null;
+            console.log(`Deletion cancelled for room ${code}`);
+        }
+
         room.addPlayer(socket.id, playerName);
         socket.join(code);
 
@@ -111,8 +118,19 @@ io.on('connection', (socket) => {
             const player = room.getPlayer(socket.id);
             if (player) {
                 room.removePlayer(socket.id);
+                room.removePlayer(socket.id);
+
                 if (room.players.length === 0) {
-                    rooms.delete(code);
+                    // Grace Period: Don't delete immediately. Wait 60s.
+                    // If someone joins back, cancel deletion.
+                    console.log(`Room ${code} is empty. Scheduling deletion in 60s...`);
+
+                    room.deleteTimeout = setTimeout(() => {
+                        if (rooms.has(code) && rooms.get(code).players.length === 0) {
+                            rooms.delete(code);
+                            console.log(`Room ${code} deleted (inactive).`);
+                        }
+                    }, 60000); // 60 seconds grace period
                 } else {
                     io.to(code).emit('room_update', room);
                 }
