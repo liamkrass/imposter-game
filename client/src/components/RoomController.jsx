@@ -137,6 +137,18 @@ function RoomController() {
         window.location.reload(); // Hard reload is safest for persistent socket issues
     };
 
+    // Auto-Sync Polling (Self-healing for desyncs)
+    useEffect(() => {
+        if (!connected || !room) return;
+
+        const interval = setInterval(() => {
+            // Ask server for latest state to ensure we didn't miss a broadcast
+            socket.emit('get_room', room.code);
+        }, 3000); // Check every 3 seconds
+
+        return () => clearInterval(interval);
+    }, [connected, room]);
+
     if (!room || !connected) {
         return (
             <div className="min-h-[60vh] w-full flex items-center justify-center p-4 relative z-10">

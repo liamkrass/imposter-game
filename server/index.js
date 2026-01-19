@@ -114,6 +114,14 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Manual Sync Enpoint
+    socket.on('get_room', (code) => {
+        const room = rooms.get(code);
+        if (room) {
+            socket.emit('room_update', room); // Send only to requestor
+        }
+    });
+
     socket.on('reset_game', (code) => {
         const room = rooms.get(code);
         if (room) {
