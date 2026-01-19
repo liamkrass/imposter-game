@@ -3,17 +3,25 @@ import socket from '../socket';
 
 function Game({ room, playerName }) {
     const [revealed, setRevealed] = useState(false);
+
+    // Safety check: ensure room and players exist
+    if (!room || !room.players) return <div className="text-white text-center">Loading Game Data...</div>;
+
     const self = room.players.find(p => p.name === playerName);
-    const isImposter = self?.role === 'IMPOSTER';
+
+    // If player not found (rare race condition or name mismatch), don't crash
+    if (!self) {
+        return (
+            <div className="text-red-400 text-center p-4">
+                <p>Error: Player identity not found in this match.</p>
+                <p className="text-xs text-gray-500 mt-2">Try rejoining.</p>
+            </div>
+        );
+    }
+
+    const isImposter = self.role === 'IMPOSTER';
 
     const handleVoteStart = () => {
-        socket.emit('vote', { code: room.code, voteId: null }); // Using vote to trigger phase? No, need a trigger.
-        // Actually server/index.js doesn't have a 'start_voting' event explicitly triggered by user, 
-        // usually games like this have a timer or manual 'Time to Vote' button.
-        // Let's add a simple vote trigger or just rely on 'vote' event if I change logic.
-        // Wait, my Room.js has startVoting(). But server/index.js doesn't expose it.
-        // I should add 'start_voting' event to server.
-        // For now, I'll assume anyone can trigger it or I'll add the event to server code.
         socket.emit('start_voting', room.code);
     };
 

@@ -43,11 +43,12 @@ function Home() {
         });
     };
 
-    const joinRoom = () => {
-        if (roomCodeInput.length !== 4) return;
-        // Just navigate to the URL. The RoomController will handle the actual joining logic.
-        navigate(`/room/${roomCodeInput.toUpperCase()}`);
-    };
+    // Auto-navigate when code is 4 chars
+    useEffect(() => {
+        if (roomCodeInput.length === 4) {
+            navigate(`/room/${roomCodeInput.toUpperCase()}`);
+        }
+    }, [roomCodeInput, navigate]);
 
     // --- RENDER HELPERS ---
 
@@ -108,23 +109,14 @@ function Home() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            value={roomCodeInput}
-                            onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
-                            className="flex-1 glass-input p-4 rounded-xl font-mono text-2xl font-black text-center uppercase tracking-[0.2em] outline-none border border-white/5 focus:border-purple-500/50 transition-all placeholder:text-gray-700 placeholder:normal-case placeholder:tracking-normal placeholder:text-base placeholder:font-sans"
-                            placeholder="Enter Code"
-                            maxLength={4}
-                        />
-                        <button
-                            onClick={joinRoom}
-                            disabled={roomCodeInput.length !== 4}
-                            className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-6 rounded-xl disabled:opacity-50 transition-all shadow-lg shadow-purple-500/20"
-                        >
-                            GO
-                        </button>
-                    </div>
+                    <input
+                        type="text"
+                        value={roomCodeInput}
+                        onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase())}
+                        className="w-full glass-input p-4 rounded-xl font-mono text-2xl font-black text-center uppercase tracking-[0.2em] outline-none border border-white/5 focus:border-purple-500/50 transition-all placeholder:text-gray-700 placeholder:normal-case placeholder:tracking-normal placeholder:text-base placeholder:font-sans"
+                        placeholder="ENTER 4-LETTER CODE"
+                        maxLength={4}
+                    />
                 </div>
 
                 {error && (
