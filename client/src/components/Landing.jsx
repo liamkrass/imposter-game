@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import LocalGame from './LocalGame';
+import OnlineManager from './OnlineManager';
 
 function Landing() {
-    const [mode, setMode] = useState('menu'); // menu, local
+    const [mode, setMode] = useState('menu'); // menu, local, online
 
     if (mode === 'local') {
         return <LocalGame onExit={() => setMode('menu')} />;
+    }
+
+    if (mode === 'online') {
+        return <OnlineManager onExit={() => setMode('menu')} />;
     }
 
     return (
@@ -31,6 +34,16 @@ function Landing() {
                                 <span className="text-sm font-normal opacity-80">(Local Party)</span>
                             </span>
                             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                        </button>
+
+                        <button
+                            onClick={() => setMode('online')}
+                            className="group relative w-full py-4 text-white font-bold text-xl rounded-2xl bg-white/5 shadow-lg border border-white/10 hover:bg-white/10 transition-all overflow-hidden"
+                        >
+                            <span className="relative z-10 flex items-center justify-center gap-2 text-gray-300 group-hover:text-white">
+                                <span>Play Online</span>
+                                <span className="text-xs font-normal opacity-50 bg-white/10 px-2 py-0.5 rounded">Beta</span>
+                            </span>
                         </button>
                     </div>
                 )}

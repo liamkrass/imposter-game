@@ -29,8 +29,8 @@ function Game({ room, playerName }) {
                 className={`w-64 h-80 cursor-pointer perspective-1000 transition-all duration-500 transform ${revealed ? 'rotate-y-180' : ''}`}
             >
                 <div className={`relative w-full h-full rounded-2xl shadow-2xl flex items-center justify-center p-6 text-center select-none transition-colors duration-500 border-2 ${revealed
-                        ? (isImposter ? 'bg-red-900/20 border-red-500' : 'bg-primary/20 border-primary')
-                        : 'bg-dark-lighter border-gray-700 hover:border-gray-500'
+                    ? (isImposter ? 'bg-red-900/20 border-red-500' : 'bg-primary/20 border-primary')
+                    : 'bg-dark-lighter border-gray-700 hover:border-gray-500'
                     }`}>
                     {!revealed ? (
                         <div className="flex flex-col items-center">
@@ -60,9 +60,7 @@ function Game({ room, playerName }) {
             <div className="mt-8 text-center">
                 <p className="text-gray-400 mb-4">Discuss with other players...</p>
                 <button
-                    onClick={() => socket.emit('vote', { code: room.code, voteId: 'TRIGGER_VOTE' })} // Hacky if server doesn't support
-                    // Actually I need to fix server to allow manual transition to voting.
-                    // I will execute a replace_file_content on server/index.js as well.
+                    onClick={handleVoteStart}
                     className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-red-900/50 transition transform hover:scale-105"
                 >
                     Start Voting
