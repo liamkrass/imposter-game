@@ -23,12 +23,25 @@ function Voting({ room, playerName }) {
             } else if (imposterCount === 1) {
                 // If only 1 selection allowed, replace
                 setSelectedIds([playerId]);
+            } else {
+                // If multiple allowed but limit reached, maybe alert or do nothing? 
+                // For now, let's allow replacing the last one or just ignore. 
+                // Better: Do nothing (user must deselect first), or shift?
+                // Maintaining existing "do nothing" behavior but logging it might help.
+                console.log("Max selection reached");
             }
         }
     };
 
     const handleSubmit = () => {
+        console.log("Submitting vote:", { code: room.code, selected: selectedIds });
         if (selectedIds.length === 0) return;
+
+        if (!room.code) {
+            console.error("Room code is missing!");
+            return;
+        }
+
         // Vote for first selected (server handles one vote per player)
         socket.emit('vote', { code: room.code, voteId: selectedIds[0] });
     };
