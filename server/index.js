@@ -166,10 +166,14 @@ io.on('connection', (socket) => {
     });
 
     socket.on('vote', ({ code, voteId }) => {
+        console.log(`Vote received from ${socket.id} for room ${code}, target: ${voteId}`);
         const room = rooms.get(code);
         if (room) {
-            room.vote(socket.id, voteId);
+            const success = room.vote(socket.id, voteId);
+            console.log(`Vote processed: ${success}. Room State: ${room.gameState}`);
             io.to(code).emit('room_update', room);
+        } else {
+            console.error(`Vote failed: Room ${code} not found`);
         }
     });
 
