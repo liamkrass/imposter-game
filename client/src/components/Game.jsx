@@ -71,7 +71,10 @@ function Game({ room, playerName }) {
             <div className="mt-8 text-center">
                 <p className="text-gray-400 mb-4">Discuss with other players...</p>
                 <button
-                    onClick={() => setShowVoting(true)}
+                    onClick={() => {
+                        socket.emit('start_voting', room.code);
+                        setShowVoting(true);
+                    }}
                     className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-red-900/50 transition transform hover:scale-105"
                 >
                     Start Voting

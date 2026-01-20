@@ -3,6 +3,7 @@ import socket from '../socket';
 
 function Voting({ room, playerName }) {
     const [selectedIds, setSelectedIds] = useState([]);
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
     // Derive voting state
     const self = room.players.find(p => p.name === playerName);
@@ -42,6 +43,8 @@ function Voting({ room, playerName }) {
             return;
         }
 
+        setIsSubmitted(true); // Optimistic UI update
+
         // Vote for first selected (server handles one vote per player)
         socket.emit('vote', { code: room.code, voteId: selectedIds[0] });
     };
@@ -55,7 +58,8 @@ function Voting({ room, playerName }) {
                 )}
             </div>
 
-            {!hasVoted ? (
+            {/* Show voting UI if NOT voted AND NOT optimistically submitted */}
+            {!hasVoted && !isSubmitted ? (
                 <>
                     <div className="grid grid-cols-1 gap-3 w-full">
                         {room.players.map((p) => {
